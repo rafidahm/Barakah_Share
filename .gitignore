@@ -1,0 +1,5 @@
+# Root .gitignore for BarakahShare monorepo
+.vite/
+*.local
+.DS_Store
+Thumbs.db
