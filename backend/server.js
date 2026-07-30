@@ -31,12 +31,30 @@ const PORT = process.env.PORT || 5000;
 
 // ── Middleware ────────────────────────────────────────────────
 
-// CORS — allow frontend dev server + production URL
+// CORS — allow frontend dev server, production URL, and Vercel preview domains
 app.use(cors({
-  origin: [
-    process.env.CLIENT_ORIGIN || 'http://localhost:5174',
-    'http://localhost:5173',
-  ],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, or server-to-server)
+    if (!origin) return callback(null, true);
+
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      process.env.CLIENT_ORIGIN
+    ].filter(Boolean);
+
+    // Matches main production domain, localhost, or any Vercel deployment preview URL
+    const isAllowed = allowedOrigins.includes(origin) || 
+                      /^https:\/\/barakah-share-[a-z0-9]+-rafidahms-projects\.vercel\.app$/.test(origin) ||
+                      /^https:\/\/barakah-share-[a-z0-9]+\.vercel\.app$/.test(origin) ||
+                      /^https:\/\/barakahshare-[a-z0-9]+\.vercel\.app$/.test(origin);
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
