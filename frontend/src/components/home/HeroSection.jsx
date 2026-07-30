@@ -236,10 +236,10 @@ export default function HeroSection() {
                 src={heroImg}
                 alt="Hands giving to another — representing generosity and sharing in the BarakahShare community"
                 style={{
-                  width: '90%',
-                  height: '90%',
-                  objectFit: 'contain',
-                  filter: 'drop-shadow(0 8px 24px rgba(116,171,139,0.3))',
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center',
                 }}
               />
             </div>
