@@ -28,7 +28,11 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('bs_token');
-      window.location.href = '/login';
+      // Prevent infinite redirect loop if user is already on login/register
+      const path = window.location.pathname;
+      if (path !== '/login' && path !== '/register') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
