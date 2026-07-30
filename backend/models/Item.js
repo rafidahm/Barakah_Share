@@ -68,6 +68,14 @@ const itemSchema = new mongoose.Schema({
   },
 }, {
   timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+});
+
+// Virtual for owner_id to align with frontend mock data references
+itemSchema.virtual('owner_id').get(function () {
+  if (!this.owner) return undefined;
+  return this.owner._id ? this.owner._id.toString() : this.owner.toString();
 });
 
 // Index for efficient browse+filter queries

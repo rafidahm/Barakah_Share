@@ -56,6 +56,19 @@ const requestSchema = new mongoose.Schema({
   completedAt:     { type: Date, default: null },
 }, {
   timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+});
+
+// Virtuals for item_id and requester_id to align with frontend mock references
+requestSchema.virtual('item_id').get(function () {
+  if (!this.item) return undefined;
+  return this.item._id ? this.item._id.toString() : this.item.toString();
+});
+
+requestSchema.virtual('requester_id').get(function () {
+  if (!this.requester) return undefined;
+  return this.requester._id ? this.requester._id.toString() : this.requester.toString();
 });
 
 // Business rule: one user can only have ONE active request per item

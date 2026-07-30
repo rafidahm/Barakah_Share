@@ -33,6 +33,19 @@ const reviewSchema = new mongoose.Schema({
   },
 }, {
   timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+});
+
+// Virtuals for item_id and reviewer_id to align with frontend mock references
+reviewSchema.virtual('item_id').get(function () {
+  if (!this.item) return undefined;
+  return this.item._id ? this.item._id.toString() : this.item.toString();
+});
+
+reviewSchema.virtual('reviewer_id').get(function () {
+  if (!this.reviewer) return undefined;
+  return this.reviewer._id ? this.reviewer._id.toString() : this.reviewer.toString();
 });
 
 // One review per user per item
