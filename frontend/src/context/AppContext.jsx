@@ -1,127 +1,146 @@
-import { createContext, useContext, useState } from 'react';
-import { mockItems, mockRequests, mockReviews, mockUsers } from '../data/mockData';
+// frontend/src/context/AppContext.jsx
+// Real API integration — replaces all mock data with live backend calls
 
-// TODO: REST API Integration — replace all mock arrays with Axios GET/POST/PATCH calls
-// TODO: MongoDB Integration — data shape matches Mongoose schemas
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import api from '../services/api';
 
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
-  const [items, setItems]       = useState(mockItems);
-  const [requests, setRequests] = useState(mockRequests);
-  const [reviews, setReviews]   = useState(mockReviews);
-  const [users, setUsers]       = useState(mockUsers);
+  const [items,    setItems]    = useState([]);
+  const [requests, setRequests] = useState([]);
+  const [reviews,  setReviews]  = useState([]);
+  const [users,    setUsers]    = useState([]);
+  const [loading,  setLoading]  = useState(true);
+
+  // ── Load all data on mount ───────────────────────────────────
+  const fetchAll = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [itemsRes, requestsRes, reviewsRes, usersRes] = await Promise.allSettled([
+        api.get('/api/items'),
+        api.get('/api/requests/my'),
+        api.get('/api/reviews/my'),
+        api.get('/api/auth/users').catch(() => ({ data: { users: [] } })), // admin only
+      ]);
+
+      if (itemsRes.status    === 'fulfilled') setItems(itemsRes.value.data.items || []);
+      if (requestsRes.status === 'fulfilled') setRequests(requestsRes.value.data.requests || []);
+      if (reviewsRes.status  === 'fulfilled') setReviews(reviewsRes.value.data.reviews || []);
+      if (usersRes.status    === 'fulfilled') setUsers(usersRes.value.data?.users || []);
+    } catch (err) {
+      console.error('AppContext fetchAll error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
   // ── Item CRUD ────────────────────────────────────────────────
-  const addItem = (item) => {
-    const newItem = { ...item, _id: `i${Date.now()}`, createdAt: new Date().toISOString().split('T')[0] };
-    setItems(prev => [newItem, ...prev]);
-    return newItem;
+  const addItem = async (itemData) => {
+    const res = await api.post('/api/items', itemData);
+    setItems(prev => [res.data.item, ...prev]);
+    return res.data.item;
   };
 
-  const updateItem = (itemId, updates) => {
-    setItems(prev => prev.map(i => i._id === itemId ? { ...i, ...updates } : i));
+  const updateItem = async (itemId, updates) => {
+    const res = await api.patch(`/api/items/${itemId}`, updates);
+    setItems(prev => prev.map(i => i._id === itemId ? res.data.item : i));
+    return res.data.item;
   };
 
-  const updateItemStatus = (itemId, newStatus) => {
-    setItems(prev => prev.map(i => i._id === itemId ? { ...i, status: newStatus } : i));
-  };
-
-  const deleteItem = (itemId) => {
+  const deleteItem = async (itemId) => {
+    await api.delete(`/api/items/${itemId}`);
     setItems(prev => prev.filter(i => i._id !== itemId));
   };
 
-  const deactivateItem = (itemId) => {
-    setItems(prev => prev.map(i =>
-      i._id === itemId && i.status === 'AVAILABLE' ? { ...i, status: 'DEACTIVATED' } : i
-    ));
+  const deactivateItem = async (itemId) => {
+    const res = await api.patch(`/api/items/${itemId}/deactivate`);
+    setItems(prev => prev.map(i => i._id === itemId ? res.data.item : i));
   };
 
-  // ── Request CRUD ─────────────────────────────────────────────
-  const addRequest = (request) => {
-    const newReq = { ...request, _id: `r${Date.now()}`, createdAt: new Date().toISOString().split('T')[0] };
-    setRequests(prev => [newReq, ...prev]);
-    return newReq;
+  // ── Request: create ──────────────────────────────────────────
+  const addRequest = async (requestData) => {
+    const res = await api.post('/api/requests', requestData);
+    setRequests(prev => [res.data.request, ...prev]);
+    return res.data.request;
   };
 
-  const updateRequestStatus = (requestId, newStatus) => {
-    setRequests(prev => prev.map(r => r._id === requestId ? { ...r, status: newStatus } : r));
+  // ── Helper: update item + request in state after lifecycle step
+  const _applyLifecycle = (itemId, requestId, updatedItem, updatedRequest) => {
+    if (updatedItem)    setItems(prev    => prev.map(i => i._id === itemId    ? updatedItem    : i));
+    if (updatedRequest) setRequests(prev => prev.map(r => r._id === requestId ? updatedRequest : r));
   };
 
   // ── DONATION TRACK ───────────────────────────────────────────
-
-  // Step 3: Donor approves ONE receiver → item: CLAIMED, request: APPROVED
-  const approveReceiver = (itemId, requestId) => {
-    updateItemStatus(itemId, 'CLAIMED');
-    updateRequestStatus(requestId, 'APPROVED');
+  const approveReceiver = async (itemId, requestId) => {
+    const res = await api.patch(`/api/requests/${requestId}/approve`);
+    _applyLifecycle(itemId, requestId, res.data.item, res.data.request);
   };
 
-  // Step 4: Receiver confirms pickup → request: RECEIVED (item stays CLAIMED)
-  const confirmPickup = (requestId) => {
-    updateRequestStatus(requestId, 'RECEIVED');
+  const confirmPickup = async (itemId, requestId) => {
+    const res = await api.patch(`/api/requests/${requestId}/confirm-pickup`);
+    _applyLifecycle(itemId, requestId, res.data.item, res.data.request);
   };
 
-  // Step 5: Donor confirms delivery → item: COMPLETED, request: COMPLETED
-  //         Only allowed when request.status === 'RECEIVED'
-  const confirmDelivery = (itemId, requestId) => {
-    updateItemStatus(itemId, 'COMPLETED');
-    updateRequestStatus(requestId, 'COMPLETED');
+  const confirmDelivery = async (itemId, requestId) => {
+    const res = await api.patch(`/api/requests/${requestId}/confirm-delivery`);
+    _applyLifecycle(itemId, requestId, res.data.item, res.data.request);
   };
 
   // ── LENDING TRACK ────────────────────────────────────────────
-
-  // Step 3: Lender approves borrower → item: CLAIMED, request: APPROVED
-  const approveBorrower = (itemId, requestId) => {
-    updateItemStatus(itemId, 'CLAIMED');
-    updateRequestStatus(requestId, 'APPROVED');
+  const approveBorrower = async (itemId, requestId) => {
+    const res = await api.patch(`/api/requests/${requestId}/approve-borrower`);
+    _applyLifecycle(itemId, requestId, res.data.item, res.data.request);
   };
 
-  // Step 4: Borrower confirms receipt → item: IN_USE, request: IN_USE
-  const confirmReceipt = (itemId, requestId) => {
-    updateItemStatus(itemId, 'IN_USE');
-    updateRequestStatus(requestId, 'IN_USE');
+  const confirmReceipt = async (itemId, requestId) => {
+    const res = await api.patch(`/api/requests/${requestId}/confirm-receipt`);
+    _applyLifecycle(itemId, requestId, res.data.item, res.data.request);
   };
 
-  // Step 5: Borrower initiates return → item: PENDING_RETURN, request: PENDING_RETURN
-  const initiateReturn = (itemId, requestId) => {
-    updateItemStatus(itemId, 'PENDING_RETURN');
-    updateRequestStatus(requestId, 'PENDING_RETURN');
+  const initiateReturn = async (itemId, requestId) => {
+    const res = await api.patch(`/api/requests/${requestId}/initiate-return`);
+    _applyLifecycle(itemId, requestId, res.data.item, res.data.request);
   };
 
-  // Step 6: Lender confirms return → item: AVAILABLE, request: RETURNED
-  const confirmReturn = (itemId, requestId) => {
-    updateItemStatus(itemId, 'AVAILABLE');
-    updateRequestStatus(requestId, 'RETURNED');
+  const confirmReturn = async (itemId, requestId) => {
+    const res = await api.patch(`/api/requests/${requestId}/confirm-return`);
+    _applyLifecycle(itemId, requestId, res.data.item, res.data.request);
   };
 
-  // ── Request Approval/Rejection ────────────────────────────────
-  const rejectRequest = (requestId) => {
-    updateRequestStatus(requestId, 'REJECTED');
+  // ── Reject request ───────────────────────────────────────────
+  const rejectRequest = async (requestId) => {
+    const res = await api.patch(`/api/requests/${requestId}/reject`);
+    setRequests(prev => prev.map(r => r._id === requestId ? res.data.request : r));
   };
 
   // ── Reviews ──────────────────────────────────────────────────
-  const addReview = (review) => {
-    const newReview = { ...review, _id: `rv${Date.now()}`, createdAt: new Date().toISOString().split('T')[0] };
-    setReviews(prev => [newReview, ...prev]);
-    return newReview;
+  const addReview = async (reviewData) => {
+    const res = await api.post('/api/reviews', reviewData);
+    setReviews(prev => [res.data.review, ...prev]);
+    return res.data.review;
   };
 
-  // ── User Management (Admin) ──────────────────────────────────
-  const makeAdmin = (userId) => {
-    setUsers(prev => prev.map(u => u._id === userId ? { ...u, role: 'admin' } : u));
+  // ── Admin: User Management ───────────────────────────────────
+  const makeAdmin = async (userId) => {
+    const res = await api.patch(`/api/auth/users/${userId}/role`, { role: 'admin' });
+    setUsers(prev => prev.map(u => u._id === userId ? res.data.user : u));
   };
 
-  const removeAdmin = (userId) => {
-    setUsers(prev => prev.map(u => u._id === userId ? { ...u, role: 'user' } : u));
+  const removeAdmin = async (userId) => {
+    const res = await api.patch(`/api/auth/users/${userId}/role`, { role: 'user' });
+    setUsers(prev => prev.map(u => u._id === userId ? res.data.user : u));
   };
 
-  // ── Helper Queries ────────────────────────────────────────────
-  const getItemById    = (id) => items.find(i => i._id === id);
-  const getUserById    = (id) => users.find(u => u._id === id);
-  const getItemRequests= (itemId) => requests.filter(r => r.item_id === itemId);
-  const getUserRequests= (userId) => requests.filter(r => r.requester_id === userId);
-  const getItemReviews = (itemId) => reviews.filter(r => r.item_id === itemId);
-  const getAvgRating   = (itemId) => {
+  // ── Helper Queries (synchronous — no API call) ───────────────
+  const getItemById     = (id)     => items.find(i => i._id === id);
+  const getUserById     = (id)     => users.find(u => u._id === id);
+  const getItemRequests = (itemId) => requests.filter(r => r.item_id === itemId);
+  const getUserRequests = (userId) => requests.filter(r => r.requester_id === userId);
+  const getItemReviews  = (itemId) => reviews.filter(r => r.item_id === itemId);
+  const getAvgRating    = (itemId) => {
     const rs = reviews.filter(r => r.item_id === itemId);
     return rs.length ? rs.reduce((sum, r) => sum + r.rating, 0) / rs.length : 0;
   };
@@ -131,11 +150,11 @@ export function AppProvider({ children }) {
   return (
     <AppContext.Provider value={{
       items, requests, reviews, users,
-      availableItems,
+      loading, availableItems, refetch: fetchAll,
       // Item actions
-      addItem, updateItem, updateItemStatus, deleteItem, deactivateItem,
+      addItem, updateItem, deleteItem, deactivateItem,
       // Request actions
-      addRequest, updateRequestStatus, rejectRequest,
+      addRequest, rejectRequest,
       // Donation track
       approveReceiver, confirmPickup, confirmDelivery,
       // Lending track
