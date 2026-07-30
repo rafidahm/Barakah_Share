@@ -29,6 +29,12 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
+        // If registering, skip auto-fetching profile in onAuthStateChanged
+        // The register function itself will handle backend creation and profile loading.
+        if (localStorage.getItem('is_registering') === 'true') {
+          setLoading(false);
+          return;
+        }
         try {
           // Get fresh ID token from Firebase
           const token = await firebaseUser.getIdToken(true);
@@ -85,6 +91,8 @@ export function AuthProvider({ children }) {
         };
       }
 
+      localStorage.setItem('is_registering', 'true');
+
       // Create Firebase user (for authentication)
       const cred  = await createUserWithEmailAndPassword(auth, email, password);
       const token = await cred.user.getIdToken();
@@ -107,6 +115,8 @@ export function AuthProvider({ children }) {
           ? 'This email is already registered'
           : err.message;
       return { success: false, error: msg };
+    } finally {
+      localStorage.removeItem('is_registering');
     }
   };
 

@@ -47,7 +47,7 @@ const verifyToken = async (req, res, next) => {
       }
 
       // Auto-create user in DB if signing in with Google for first time
-      if (!user) {
+      if (!user && decoded.firebase?.sign_in_provider === 'google.com') {
         user = await User.create({
           firebaseUid: decoded.uid,
           name:     decoded.name  || 'Anonymous',
