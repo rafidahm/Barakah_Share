@@ -68,9 +68,14 @@ export function AuthProvider({ children }) {
           error: 'Only IIUC university emails are allowed (@ugrad.iiuc.ac.bd or @iiuc.ac.bd)',
         };
       }
-      await signInWithEmailAndPassword(auth, email, password);
-      // onAuthStateChanged above handles setCurrentUser
-      return { success: true };
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const token = await cred.user.getIdToken(true);
+      localStorage.setItem('bs_token', token);
+
+      // Fetch user profile from MongoDB via backend
+      const res = await api.get('/api/auth/me');
+      setCurrentUser(res.data.user);
+      return { success: true, user: res.data.user };
     } catch (err) {
       const msg =
         err.code === 'auth/invalid-credential'
@@ -108,7 +113,7 @@ export function AuthProvider({ children }) {
       });
 
       setCurrentUser(res.data.user);
-      return { success: true };
+      return { success: true, user: res.data.user };
     } catch (err) {
       const msg =
         err.code === 'auth/email-already-in-use'
@@ -135,8 +140,13 @@ export function AuthProvider({ children }) {
         };
       }
 
-      // onAuthStateChanged handles the rest (token + profile fetch)
-      return { success: true };
+      const token = await result.user.getIdToken(true);
+      localStorage.setItem('bs_token', token);
+
+      // Fetch user profile from MongoDB via backend
+      const res = await api.get('/api/auth/me');
+      setCurrentUser(res.data.user);
+      return { success: true, user: res.data.user };
     } catch (err) {
       if (err.code === 'auth/popup-closed-by-user') {
         return { success: false, error: 'Sign-in cancelled' };

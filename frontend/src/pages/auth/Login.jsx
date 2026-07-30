@@ -22,7 +22,7 @@ export default function Login() {
   const onSubmit = async (data) => {
     setLoading(true);
     await new Promise(r => setTimeout(r, 600)); // simulate async
-    const result = login(data.email, data.password);
+    const result = await login(data.email, data.password);
     setLoading(false);
     if (result.success) {
       toast.success('Welcome Back!', `Hello, ${result.user.name.split(' ')[0]}!`);
@@ -35,11 +35,13 @@ export default function Login() {
   const handleGoogle = async () => {
     setGoogleLoad(true);
     await new Promise(r => setTimeout(r, 800));
-    const result = loginWithGoogle();
+    const result = await loginWithGoogle();
     setGoogleLoad(false);
     if (result.success) {
-      toast.success('Logged in with Google!', `Welcome, ${result.user.name}!`);
+      toast.success('Logged in with Google!', `Welcome to BarakahShare!`);
       navigate('/dashboard');
+    } else {
+      toast.error('Google Sign-In Failed', result.error);
     }
   };
 

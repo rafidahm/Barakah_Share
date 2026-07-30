@@ -21,7 +21,7 @@ export default function Register() {
   const onSubmit = async (data) => {
     setLoading(true);
     await new Promise(r => setTimeout(r, 700));
-    const result = registerUser(data.name, data.email, data.password);
+    const result = await registerUser(data.name, data.email, data.password);
     setLoading(false);
     if (result.success) {
       toast.success('Account Created!', `Welcome to BarakahShare, ${result.user.name.split(' ')[0]}!`);
@@ -34,8 +34,14 @@ export default function Register() {
   const handleGoogle = async () => {
     setGoogleLoad(true);
     await new Promise(r => setTimeout(r, 800));
-    const { loginWithGoogle: gLogin } = useAuth();
+    const result = await loginWithGoogle();
     setGoogleLoad(false);
+    if (result.success) {
+      toast.success('Logged in with Google!', `Welcome to BarakahShare!`);
+      navigate('/dashboard');
+    } else {
+      toast.error('Google Sign-In Failed', result.error);
+    }
   };
 
   return (
