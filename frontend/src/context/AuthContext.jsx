@@ -96,6 +96,7 @@ export function AuthProvider({ children }) {
         email,
         password,
         department,
+        firebaseUid: cred.user.uid,
       });
 
       setCurrentUser(res.data.user);

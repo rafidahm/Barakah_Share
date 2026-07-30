@@ -37,6 +37,15 @@ const verifyToken = async (req, res, next) => {
 
       user = await User.findOne({ firebaseUid: decoded.uid });
 
+      // Fallback: search by email to link existing email/password accounts
+      if (!user && decoded.email) {
+        user = await User.findOne({ email: decoded.email.toLowerCase().trim() });
+        if (user) {
+          user.firebaseUid = decoded.uid;
+          await user.save();
+        }
+      }
+
       // Auto-create user in DB if signing in with Google for first time
       if (!user) {
         user = await User.create({

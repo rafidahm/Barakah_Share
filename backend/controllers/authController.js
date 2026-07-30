@@ -12,7 +12,7 @@ const signToken = (id) =>
  */
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, department } = req.body;
+    const { name, email, password, department, firebaseUid } = req.body;
 
     // Validation
     if (!name || !email || !password) {
@@ -38,7 +38,7 @@ exports.register = async (req, res) => {
     }
 
     // Create user (password hashed in pre-save hook)
-    const user = await User.create({ name, email, password, department, provider: 'email' });
+    const user = await User.create({ name, email, password, department, firebaseUid, provider: 'email' });
 
     const token = signToken(user._id);
 
