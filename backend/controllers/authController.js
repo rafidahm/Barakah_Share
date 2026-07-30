@@ -22,6 +22,15 @@ exports.register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Password must be at least 6 characters.' });
     }
 
+    // Domain restriction validation (Backend safeguard)
+    const emailLower = email.toLowerCase().trim();
+    if (!emailLower.endsWith('@ugrad.iiuc.ac.bd') && !emailLower.endsWith('@iiuc.ac.bd')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Registration is restricted to IIUC university emails (@ugrad.iiuc.ac.bd or @iiuc.ac.bd).',
+      });
+    }
+
     // Check duplicate email
     const exists = await User.findOne({ email });
     if (exists) {

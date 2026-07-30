@@ -17,17 +17,34 @@ export function AppProvider({ children }) {
   const fetchAll = useCallback(async () => {
     try {
       setLoading(true);
-      const [itemsRes, requestsRes, reviewsRes, usersRes] = await Promise.allSettled([
-        api.get('/api/items'),
-        api.get('/api/requests/my'),
-        api.get('/api/reviews/my'),
-        api.get('/api/auth/users').catch(() => ({ data: { users: [] } })), // admin only
-      ]);
+      const token = localStorage.getItem('bs_token');
 
-      if (itemsRes.status    === 'fulfilled') setItems(itemsRes.value.data.items || []);
-      if (requestsRes.status === 'fulfilled') setRequests(requestsRes.value.data.requests || []);
-      if (reviewsRes.status  === 'fulfilled') setReviews(reviewsRes.value.data.reviews || []);
-      if (usersRes.status    === 'fulfilled') setUsers(usersRes.value.data?.users || []);
+      if (token) {
+        // Authenticated user — fetch both public and private data
+        const [itemsRes, requestsRes, reviewsRes, usersRes] = await Promise.allSettled([
+          api.get('/api/items'),
+          api.get('/api/requests/my'),
+          api.get('/api/reviews/my'),
+          api.get('/api/auth/users').catch(() => ({ data: { users: [] } })), // admin only
+        ]);
+
+        if (itemsRes.status    === 'fulfilled') setItems(itemsRes.value.data.items || []);
+        if (requestsRes.status === 'fulfilled') setRequests(requestsRes.value.data.requests || []);
+        if (reviewsRes.status  === 'fulfilled') setReviews(reviewsRes.value.data.reviews || []);
+        if (usersRes.status    === 'fulfilled') setUsers(usersRes.value.data?.users || []);
+      } else {
+        // Guest user — only fetch public items, skip private requests
+        try {
+          const itemsRes = await api.get('/api/items');
+          setItems(itemsRes.data.items || []);
+        } catch (err) {
+          console.error('Error fetching public items:', err);
+          setItems([]);
+        }
+        setRequests([]);
+        setReviews([]);
+        setUsers([]);
+      }
     } catch (err) {
       console.error('AppContext fetchAll error:', err);
     } finally {

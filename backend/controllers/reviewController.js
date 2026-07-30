@@ -13,7 +13,8 @@ const Item    = require('../models/Item');
  */
 exports.addReview = async (req, res) => {
   try {
-    const { itemId, rating, comment } = req.body;
+    const itemId = req.body.itemId || req.body.item_id;
+    const { rating, comment } = req.body;
 
     if (!itemId || !rating || !comment) {
       return res.status(400).json({ success: false, message: 'itemId, rating, and comment are required.' });

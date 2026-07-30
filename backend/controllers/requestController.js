@@ -15,7 +15,8 @@ const ensureOwner = (item, userId) => String(item.owner) === String(userId);
  */
 exports.createRequest = async (req, res) => {
   try {
-    const { itemId, message } = req.body;
+    const itemId = req.body.itemId || req.body.item_id;
+    const { message } = req.body;
     if (!itemId) return res.status(400).json({ success: false, message: 'itemId is required.' });
 
     const item = await Item.findById(itemId);
@@ -135,7 +136,7 @@ exports.approveReceiver = async (req, res) => {
     item.status = 'CLAIMED';
     await item.save();
 
-    res.status(200).json({ success: true, request });
+    res.status(200).json({ success: true, request, item });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Approval failed.', error: err.message });
   }
@@ -162,7 +163,7 @@ exports.confirmPickup = async (req, res) => {
     request.receivedAt = new Date();
     await request.save();
 
-    res.status(200).json({ success: true, request });
+    res.status(200).json({ success: true, request, item: request.item });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Pickup confirmation failed.', error: err.message });
   }
@@ -193,7 +194,7 @@ exports.confirmDelivery = async (req, res) => {
     item.status = 'COMPLETED';
     await item.save();
 
-    res.status(200).json({ success: true, request });
+    res.status(200).json({ success: true, request, item });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Delivery confirmation failed.', error: err.message });
   }
@@ -232,7 +233,7 @@ exports.approveBorrower = async (req, res) => {
     item.status = 'CLAIMED';
     await item.save();
 
-    res.status(200).json({ success: true, request });
+    res.status(200).json({ success: true, request, item });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Borrower approval failed.', error: err.message });
   }
@@ -262,7 +263,7 @@ exports.confirmReceipt = async (req, res) => {
     request.item.status = 'IN_USE';
     await request.item.save();
 
-    res.status(200).json({ success: true, request });
+    res.status(200).json({ success: true, request, item: request.item });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Receipt confirmation failed.', error: err.message });
   }
@@ -292,7 +293,7 @@ exports.initiateReturn = async (req, res) => {
     request.item.status = 'PENDING_RETURN';
     await request.item.save();
 
-    res.status(200).json({ success: true, request });
+    res.status(200).json({ success: true, request, item: request.item });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Return initiation failed.', error: err.message });
   }
@@ -323,7 +324,7 @@ exports.confirmReturn = async (req, res) => {
     item.status = 'AVAILABLE';
     await item.save();
 
-    res.status(200).json({ success: true, request });
+    res.status(200).json({ success: true, request, item });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Return confirmation failed.', error: err.message });
   }
@@ -350,7 +351,7 @@ exports.rejectRequest = async (req, res) => {
     request.status = 'REJECTED';
     await request.save();
 
-    res.status(200).json({ success: true, request });
+    res.status(200).json({ success: true, request, item });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Rejection failed.', error: err.message });
   }

@@ -25,6 +25,16 @@ const verifyToken = async (req, res, next) => {
     // ── Try Firebase ID Token first ──────────────────────────
     try {
       const decoded = await admin.auth().verifyIdToken(token);
+
+      // Enforce university email domain for Google authentication
+      const emailLower = (decoded.email || '').toLowerCase().trim();
+      if (!emailLower.endsWith('@ugrad.iiuc.ac.bd') && !emailLower.endsWith('@iiuc.ac.bd')) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access restricted to IIUC university emails (@ugrad.iiuc.ac.bd or @iiuc.ac.bd).',
+        });
+      }
+
       user = await User.findOne({ firebaseUid: decoded.uid });
 
       // Auto-create user in DB if signing in with Google for first time
@@ -37,7 +47,7 @@ const verifyToken = async (req, res, next) => {
           role:     'user',
         });
       }
-    } catch {
+    } catch (err) {
       // ── Try JWT fallback ─────────────────────────────────────
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
