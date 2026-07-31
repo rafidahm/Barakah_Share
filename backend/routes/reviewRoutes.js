@@ -5,6 +5,7 @@ const verifyAdmin = require('../middleware/verifyAdmin');
 
 // Public
 router.get('/item/:itemId', ctrl.getItemReviews);
+router.get('/recent',      ctrl.getRecentReviews);
 
 // Protected
 router.post('/',   verifyToken, ctrl.addReview);

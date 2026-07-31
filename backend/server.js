@@ -85,6 +85,25 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// ── Public Stats ──────────────────────────────────────────────
+app.get('/api/stats', async (req, res) => {
+  try {
+    const Item    = require('./models/Item');
+    const Request = require('./models/Request');
+    const User    = require('./models/User');
+
+    const [totalItems, completedExchanges, totalUsers] = await Promise.all([
+      Item.countDocuments({ status: { $ne: 'DELETED' } }),
+      Request.countDocuments({ status: 'COMPLETED' }),
+      User.countDocuments(),
+    ]);
+
+    res.status(200).json({ success: true, stats: { totalItems, completedExchanges, totalUsers } });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Could not fetch stats.' });
+  }
+});
+
 // ── Analytics endpoint (Admin) ────────────────────────────────
 app.get('/api/analytics', async (req, res) => {
   try {

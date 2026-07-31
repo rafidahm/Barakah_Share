@@ -133,3 +133,17 @@ exports.getAllReviews = async (req, res) => {
     res.status(500).json({ success: false, message: 'Could not fetch reviews.', error: err.message });
   }
 };
+
+// ── GET /api/reviews/recent (Public) ───────────────────────────
+exports.getRecentReviews = async (req, res) => {
+  try {
+    const reviews = await Review.find()
+      .populate('item', 'name type')
+      .populate('reviewer', 'name email department avatar')
+      .sort({ createdAt: -1 })
+      .limit(12);
+    res.status(200).json({ success: true, count: reviews.length, reviews });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Could not fetch recent reviews.', error: err.message });
+  }
+};

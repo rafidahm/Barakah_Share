@@ -82,13 +82,14 @@ exports.getItemById = async (req, res) => {
  */
 exports.createItem = async (req, res) => {
   try {
-    const { name, category, description, type, condition, quantity } = req.body;
+    const { name, category, description, type, condition, quantity, image } = req.body;
 
     const item = await Item.create({
       name, category, description, type, condition,
       quantity: quantity || 1,
       owner: req.user._id,
       status: 'AVAILABLE',
+      image: image || null,
     });
 
     await item.populate('owner', 'name email department avatar');
@@ -125,7 +126,7 @@ exports.updateItem = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Cannot edit an item that is not AVAILABLE.' });
     }
 
-    const allowed = ['name', 'category', 'description', 'condition', 'quantity'];
+    const allowed = ['name', 'category', 'description', 'condition', 'quantity', 'image'];
     // Admin can also change status directly
     if (isAdmin) allowed.push('status', 'type');
 
