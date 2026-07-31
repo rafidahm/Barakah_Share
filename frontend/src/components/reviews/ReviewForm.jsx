@@ -19,14 +19,21 @@ export default function ReviewForm({ itemId, onSuccess }) {
     if (comment.trim().length < 5) { setError('Comment must be at least 5 characters.'); return; }
     setError('');
     setLoading(true);
-    await new Promise(r => setTimeout(r, 400));
-    // TODO: REST API Integration — POST /api/reviews with JWT auth header
-    addReview({ item_id: itemId, reviewer_id: currentUser._id, rating, comment: comment.trim() });
-    toast.success('Review Added ✓', 'Thank you for your feedback!');
-    setRating(0);
-    setComment('');
-    setLoading(false);
-    onSuccess?.();
+    try {
+      await new Promise(r => setTimeout(r, 400));
+      await addReview({ item_id: itemId, rating, comment: comment.trim() });
+      toast.success('Review Added ✓', 'Thank you for your feedback!');
+      setRating(0);
+      setComment('');
+      onSuccess?.();
+    } catch (err) {
+      console.error(err);
+      const errMsg = err.response?.data?.message || err.message || 'Could not submit review.';
+      setError(errMsg);
+      toast.error('Submission Failed', errMsg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
