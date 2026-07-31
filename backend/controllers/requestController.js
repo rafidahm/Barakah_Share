@@ -120,6 +120,9 @@ exports.approveReceiver = async (req, res) => {
     if (request.status !== 'PENDING') {
       return res.status(400).json({ success: false, message: 'Can only approve PENDING requests.' });
     }
+    if (item.status === 'DEACTIVATED') {
+      return res.status(400).json({ success: false, message: 'Cannot approve a request for a deactivated item. Reactivate the item first.' });
+    }
 
     // Approve this request
     request.status     = 'APPROVED';
@@ -219,6 +222,9 @@ exports.approveBorrower = async (req, res) => {
     }
     if (request.status !== 'PENDING') {
       return res.status(400).json({ success: false, message: 'Can only approve PENDING requests.' });
+    }
+    if (item.status === 'DEACTIVATED') {
+      return res.status(400).json({ success: false, message: 'Cannot approve a request for a deactivated item. Reactivate the item first.' });
     }
 
     request.status     = 'APPROVED';

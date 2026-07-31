@@ -190,6 +190,18 @@ exports.deactivateItem = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Only AVAILABLE items can be deactivated.' });
     }
 
+    // Block deactivation if there are any active (PENDING or APPROVED) requests
+    const activeRequests = await Request.countDocuments({
+      item: item._id,
+      status: { $in: ['PENDING', 'APPROVED'] },
+    });
+    if (activeRequests > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot deactivate: ${activeRequests} active request(s) exist. Reject or resolve them first.`,
+      });
+    }
+
     item.status = 'DEACTIVATED';
     await item.save();
 

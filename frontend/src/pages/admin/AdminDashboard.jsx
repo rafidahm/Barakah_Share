@@ -13,7 +13,7 @@ import { useApp }  from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
 import { formatDate, getInitials, getAvatarColor } from '../../utils/helpers';
-import { Users, Package, Inbox, Star, CheckCircle, XCircle, Trash2, Edit3, ShieldCheck, ShieldOff } from 'lucide-react';
+import { Users, Package, Inbox, Star, CheckCircle, XCircle, Trash2, Edit3, ShieldCheck, ShieldOff, Power } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function AdminDashboard() {
@@ -21,7 +21,7 @@ export default function AdminDashboard() {
   const toast = useToast();
   const {
     items, requests, reviews, users,
-    makeAdmin, removeAdmin, deleteItem, updateItem,
+    makeAdmin, removeAdmin, deleteItem, updateItem, deactivateItem, reactivateItem,
     approveReceiver, approveBorrower, rejectRequest, getItemById, getUserById,
   } = useApp();
 
@@ -230,6 +230,12 @@ export default function AdminDashboard() {
                   <td style={{ padding: '0.85rem 1rem' }}>
                     <div style={{ display: 'flex', gap: '0.3rem' }}>
                       <button className="btn btn-ghost btn-sm" aria-label="Edit" onClick={() => { setEditItem(item); setItemModal(true); }}><Edit3 size={13} /></button>
+                      {item.status === 'DEACTIVATED'
+                        ? <button className="btn btn-ghost btn-sm" aria-label="Reactivate" style={{ color: 'var(--color-green-main)' }} onClick={() => { reactivateItem(item._id); toast.success('Item Reactivated ✓', `"${item.name}" is now public.`); }}><Power size={13} /></button>
+                        : item.status === 'AVAILABLE'
+                          ? <button className="btn btn-ghost btn-sm" aria-label="Deactivate" style={{ color: '#e65100' }} onClick={async () => { try { await deactivateItem(item._id); toast.info('Item Deactivated', `"${item.name}" removed from listings.`); } catch (err) { toast.error('Cannot Deactivate', err.response?.data?.message || 'Deactivation failed.'); } }}><Power size={13} /></button>
+                          : null
+                      }
                       <button className="btn btn-ghost btn-sm" style={{ color: '#c62828' }} aria-label="Delete" onClick={() => setDelConf({ itemId: item._id, name: item.name })}><Trash2 size={13} /></button>
                     </div>
                   </td>

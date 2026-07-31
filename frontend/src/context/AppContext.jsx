@@ -20,44 +20,66 @@ export function AppProvider({ children }) {
       const token = localStorage.getItem('bs_token');
 
       if (token) {
-        // Authenticated user — fetch both public and private data
-        const [itemsRes, requestsRes, reviewsRes, usersRes, myItemsRes, incomingRequestsRes] = await Promise.allSettled([
-          api.get('/api/items'),
-          api.get('/api/requests/my'),
-          api.get('/api/reviews/my'),
-          api.get('/api/auth/users').catch(() => ({ data: { users: [] } })), // admin only
-          api.get('/api/items/my'),
-          api.get('/api/requests/incoming'),
-        ]);
+        // Identify current user role first
+        let isAdmin = false;
+        try {
+          const meRes = await api.get('/api/auth/me');
+          isAdmin = meRes.data?.user?.role === 'admin';
+        } catch {
+          // token invalid — let auth context handle logout
+        }
 
-        let allItems = [];
-        if (itemsRes.status === 'fulfilled') {
-          allItems = itemsRes.value.data.items || [];
-        }
-        if (myItemsRes.status === 'fulfilled') {
-          const myItems = myItemsRes.value.data.items || [];
-          // Merge myItems into allItems, overwriting duplicates by ID
-          const itemMap = new Map(allItems.map(i => [i._id, i]));
-          myItems.forEach(i => itemMap.set(i._id, i));
-          allItems = Array.from(itemMap.values());
-        }
-        setItems(allItems);
+        if (isAdmin) {
+          // ── Admin fetch: get everything ──────────────────────
+          const [itemsRes, requestsRes, reviewsRes, usersRes] = await Promise.allSettled([
+            api.get('/api/items?status=all&limit=500'),       // ALL items regardless of status
+            api.get('/api/requests').catch(() => api.get('/api/requests/incoming')), // admin all or fallback
+            api.get('/api/reviews/my'),
+            api.get('/api/auth/users'),
+          ]);
 
-        let allRequests = [];
-        if (requestsRes.status === 'fulfilled') {
-          allRequests = requestsRes.value.data.requests || [];
-        }
-        if (incomingRequestsRes.status === 'fulfilled') {
-          const incomingRequests = incomingRequestsRes.value.data.requests || [];
-          // Merge incoming requests into allRequests, overwriting duplicates by ID
-          const reqMap = new Map(allRequests.map(r => [r._id, r]));
-          incomingRequests.forEach(r => reqMap.set(r._id, r));
-          allRequests = Array.from(reqMap.values());
-        }
-        setRequests(allRequests);
+          if (itemsRes.status    === 'fulfilled') setItems(itemsRes.value.data.items || []);
+          if (requestsRes.status === 'fulfilled') setRequests(requestsRes.value.data.requests || []);
+          if (reviewsRes.status  === 'fulfilled') setReviews(reviewsRes.value.data.reviews || []);
+          if (usersRes.status    === 'fulfilled') setUsers(usersRes.value.data?.users || []);
 
-        if (reviewsRes.status  === 'fulfilled') setReviews(reviewsRes.value.data.reviews || []);
-        if (usersRes.status    === 'fulfilled') setUsers(usersRes.value.data?.users || []);
+        } else {
+          // ── Regular user fetch ───────────────────────────────
+          const [itemsRes, requestsRes, reviewsRes, myItemsRes, incomingRequestsRes] = await Promise.allSettled([
+            api.get('/api/items'),
+            api.get('/api/requests/my'),
+            api.get('/api/reviews/my'),
+            api.get('/api/items/my'),
+            api.get('/api/requests/incoming'),
+          ]);
+
+          let allItems = [];
+          if (itemsRes.status === 'fulfilled') {
+            allItems = itemsRes.value.data.items || [];
+          }
+          if (myItemsRes.status === 'fulfilled') {
+            const myItems = myItemsRes.value.data.items || [];
+            const itemMap = new Map(allItems.map(i => [i._id, i]));
+            myItems.forEach(i => itemMap.set(i._id, i));
+            allItems = Array.from(itemMap.values());
+          }
+          setItems(allItems);
+
+          let allRequests = [];
+          if (requestsRes.status === 'fulfilled') {
+            allRequests = requestsRes.value.data.requests || [];
+          }
+          if (incomingRequestsRes.status === 'fulfilled') {
+            const incomingRequests = incomingRequestsRes.value.data.requests || [];
+            const reqMap = new Map(allRequests.map(r => [r._id, r]));
+            incomingRequests.forEach(r => reqMap.set(r._id, r));
+            allRequests = Array.from(reqMap.values());
+          }
+          setRequests(allRequests);
+
+          if (reviewsRes.status  === 'fulfilled') setReviews(reviewsRes.value.data.reviews || []);
+          setUsers([]);
+        }
       } else {
         // Guest user — only fetch public items, skip private requests
         try {

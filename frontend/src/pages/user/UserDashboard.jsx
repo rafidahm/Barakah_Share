@@ -145,7 +145,7 @@ export default function UserDashboard() {
                   {item.status === 'AVAILABLE' && (
                     <>
                       <button id={`edit-item-${item._id}`} className="btn btn-ghost btn-sm" aria-label="Edit item" onClick={() => navigate(`/donate-lend?edit=${item._id}`)}><Edit3 size={14} /></button>
-                      <button id={`deactivate-item-${item._id}`} className="btn btn-ghost btn-sm" aria-label="Deactivate" style={{ color: '#e65100' }} onClick={() => { deactivateItem(item._id); toast.info('Item Deactivated', `"${item.name}" removed from listings.`); }}><Power size={14} /></button>
+                      <button id={`deactivate-item-${item._id}`} className="btn btn-ghost btn-sm" aria-label="Deactivate" style={{ color: '#e65100' }} onClick={async () => { try { await deactivateItem(item._id); toast.info('Item Deactivated', `"${item.name}" removed from listings.`); } catch (err) { toast.error('Cannot Deactivate', err.response?.data?.message || 'Deactivation failed.'); } }}><Power size={14} /></button>
                     </>
                   )}
                   {item.status === 'DEACTIVATED' && (
