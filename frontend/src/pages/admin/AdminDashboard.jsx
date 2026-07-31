@@ -406,8 +406,14 @@ export default function AdminDashboard() {
         confirmLabel="Delete" confirmDanger />
 
       <style>{`
-        @media(max-width:768px){ #admin-dashboard > div.container { grid-template-columns: 1fr !important; } }
-        @media(max-width:900px){ #admin-dashboard table { font-size: 0.78rem; } }
+        @media (max-width: 768px) {
+          #admin-dashboard > div.container {
+            grid-template-columns: 1fr !important;
+            padding: 1.25rem 1rem !important;
+            gap: 0 !important;
+          }
+        }
+        @media (max-width: 900px) { #admin-dashboard table { font-size: 0.78rem; } }
       `}</style>
     </>
   );

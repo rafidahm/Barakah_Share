@@ -482,7 +482,15 @@ export default function UserDashboard() {
         </form>
       </Modal>
 
-      <style>{`@media(max-width:768px){ #user-dashboard > div.container { grid-template-columns: 1fr !important; } }`}</style>
+      <style>{`
+        @media (max-width: 768px) {
+          #user-dashboard > div.container {
+            grid-template-columns: 1fr !important;
+            padding: 1.25rem 1rem !important;
+            gap: 0 !important;
+          }
+        }
+      `}</style>
     </>
   );
 }
