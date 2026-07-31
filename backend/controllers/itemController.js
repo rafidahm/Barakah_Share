@@ -199,6 +199,32 @@ exports.deactivateItem = async (req, res) => {
   }
 };
 
+// ── PATCH /api/items/:id/reactivate ──────────────────────────
+/**
+ * Reactivate an item (owner only, DEACTIVATED → AVAILABLE)
+ */
+exports.reactivateItem = async (req, res) => {
+  try {
+    const item = await Item.findById(req.params.id);
+    if (!item) return res.status(404).json({ success: false, message: 'Item not found.' });
+
+    if (String(item.owner) !== String(req.user._id) && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Not authorized.' });
+    }
+
+    if (item.status !== 'DEACTIVATED') {
+      return res.status(400).json({ success: false, message: 'Only DEACTIVATED items can be reactivated.' });
+    }
+
+    item.status = 'AVAILABLE';
+    await item.save();
+
+    res.status(200).json({ success: true, item });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Reactivation failed.', error: err.message });
+  }
+};
+
 // ── GET /api/items/my ─────────────────────────────────────────
 /**
  * Get items posted by the logged-in user

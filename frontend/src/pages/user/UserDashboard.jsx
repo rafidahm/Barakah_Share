@@ -11,6 +11,7 @@ import Modal from '../../components/common/Modal';
 import ItemForm from '../../components/items/ItemForm';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import StarRating from '../../components/reviews/StarRating';
+import HorizontalStepper from '../../components/common/HorizontalStepper';
 import {
   formatDate, getInitials, getAvatarColor, formatStatus,
 } from '../../utils/helpers';
@@ -22,7 +23,7 @@ export default function UserDashboard() {
   const toast = useToast();
   const {
     items, requests, reviews, users,
-    addItem, updateItem, deleteItem, deactivateItem,
+    addItem, updateItem, deleteItem, deactivateItem, reactivateItem,
     approveReceiver, confirmPickup, confirmDelivery,
     approveBorrower, confirmReceipt, initiateReturn, confirmReturn,
     rejectRequest, getItemById, getUserById, getItemRequests,
@@ -147,6 +148,9 @@ export default function UserDashboard() {
                       <button id={`deactivate-item-${item._id}`} className="btn btn-ghost btn-sm" aria-label="Deactivate" style={{ color: '#e65100' }} onClick={() => { deactivateItem(item._id); toast.info('Item Deactivated', `"${item.name}" removed from listings.`); }}><Power size={14} /></button>
                     </>
                   )}
+                  {item.status === 'DEACTIVATED' && (
+                    <button id={`reactivate-item-${item._id}`} className="btn btn-ghost btn-sm" aria-label="Reactivate" style={{ color: 'var(--color-green-main)' }} onClick={() => { reactivateItem(item._id); toast.success('Item Reactivated ✓', `"${item.name}" is now public and available.`); }}><Power size={14} /></button>
+                  )}
                   {(item.status === 'AVAILABLE' || item.status === 'DEACTIVATED') && (
                     <button id={`delete-item-${item._id}`} className="btn btn-ghost btn-sm" aria-label="Delete item" style={{ color: '#c62828' }} onClick={() => setDeleteConf({ itemId: item._id, name: item.name })}><Trash2 size={14} /></button>
                   )}
@@ -193,26 +197,33 @@ export default function UserDashboard() {
 
               {/* Approved request actions for owner */}
               {approvedReq && (
-                <div style={{ background: 'var(--color-mint-pale)', borderRadius: 'var(--radius-md)', padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-                  <div>
-                    <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-text-mid)' }}>
-                      {getUserById(approvedReq.requester_id)?.name || 'Requester'} — <Badge status={approvedReq.status} />
-                    </p>
+                <div style={{ background: 'var(--color-mint-pale)', borderRadius: 'var(--radius-md)', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                    <div>
+                      <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-text-mid)', margin: 0 }}>
+                        Active request by: <strong style={{ color: 'var(--color-text-dark)' }}>{getUserById(approvedReq.requester_id)?.name || 'Requester'}</strong>
+                      </p>
+                    </div>
+                    <div>
+                      {/* DONATE: confirm delivery when RECEIVED */}
+                      {item.type === 'DONATE' && approvedReq.status === 'RECEIVED' && (
+                        <button id={`confirm-delivery-${item._id}`} className="btn btn-primary btn-sm"
+                          onClick={() => { confirmDelivery(item._id, approvedReq._id); toast.success('Donation Delivered ✓', 'Donation marked as completed.'); }}>
+                          Confirm Delivery
+                        </button>
+                      )}
+                      {/* LEND: confirm return when PENDING_RETURN */}
+                      {item.type === 'LEND' && approvedReq.status === 'PENDING_RETURN' && (
+                        <button id={`confirm-return-${item._id}`} className="btn btn-primary btn-sm"
+                          onClick={() => { confirmReturn(item._id, approvedReq._id); toast.success('Return Confirmed ✓', 'Item is available again.'); }}>
+                          Confirm Return
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  {/* DONATE: confirm delivery when RECEIVED */}
-                  {item.type === 'DONATE' && approvedReq.status === 'RECEIVED' && (
-                    <button id={`confirm-delivery-${item._id}`} className="btn btn-primary btn-sm"
-                      onClick={() => { confirmDelivery(item._id, approvedReq._id); toast.success('Donation Delivered ✓', 'Donation marked as completed.'); }}>
-                      Confirm Delivery
-                    </button>
-                  )}
-                  {/* LEND: confirm return when PENDING_RETURN */}
-                  {item.type === 'LEND' && approvedReq.status === 'PENDING_RETURN' && (
-                    <button id={`confirm-return-${item._id}`} className="btn btn-primary btn-sm"
-                      onClick={() => { confirmReturn(item._id, approvedReq._id); toast.success('Return Confirmed ✓', 'Item is available again.'); }}>
-                      Confirm Return
-                    </button>
-                  )}
+                  <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '0.75rem' }}>
+                    <HorizontalStepper type={item.type} status={approvedReq.status} />
+                  </div>
                 </div>
               )}
             </div>
@@ -239,7 +250,7 @@ export default function UserDashboard() {
           const item = getItemById(req.item_id);
           if (!item) return null;
           return (
-            <div key={req._id} className="card card-body animate-fade-up">
+            <div key={req._id} className="card card-body animate-fade-up" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
@@ -270,6 +281,9 @@ export default function UserDashboard() {
                     </button>
                   )}
                 </div>
+              </div>
+              <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '0.75rem' }}>
+                <HorizontalStepper type={item.type} status={req.status} />
               </div>
             </div>
           );

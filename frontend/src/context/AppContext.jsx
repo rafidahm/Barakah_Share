@@ -77,6 +77,11 @@ export function AppProvider({ children }) {
     setItems(prev => prev.map(i => i._id === itemId ? res.data.item : i));
   };
 
+  const reactivateItem = async (itemId) => {
+    const res = await api.patch(`/api/items/${itemId}/reactivate`);
+    setItems(prev => prev.map(i => i._id === itemId ? res.data.item : i));
+  };
+
   // ── Request: create ──────────────────────────────────────────
   const addRequest = async (requestData) => {
     const res = await api.post('/api/requests', requestData);
@@ -169,7 +174,7 @@ export function AppProvider({ children }) {
       items, requests, reviews, users,
       loading, availableItems, refetch: fetchAll,
       // Item actions
-      addItem, updateItem, deleteItem, deactivateItem,
+      addItem, updateItem, deleteItem, deactivateItem, reactivateItem,
       // Request actions
       addRequest, rejectRequest,
       // Donation track

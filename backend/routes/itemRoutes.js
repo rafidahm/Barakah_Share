@@ -13,5 +13,6 @@ router.post('/',               verifyToken, ctrl.createItem);
 router.patch('/:id',           verifyToken, ctrl.updateItem);
 router.delete('/:id',          verifyToken, ctrl.deleteItem);
 router.patch('/:id/deactivate',verifyToken, ctrl.deactivateItem);
+router.patch('/:id/reactivate',verifyToken, ctrl.reactivateItem);
 
 module.exports = router;
