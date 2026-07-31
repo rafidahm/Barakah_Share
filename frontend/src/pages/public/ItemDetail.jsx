@@ -1,13 +1,15 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Package, User, Calendar, Tag, Hash, AlertCircle } from 'lucide-react';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
+import api from '../../services/api';
 import Badge from '../../components/common/Badge';
 import Modal from '../../components/common/Modal';
 import ReviewCard from '../../components/reviews/ReviewCard';
 import ReviewForm from '../../components/reviews/ReviewForm';
 import StarRating from '../../components/reviews/StarRating';
+import HorizontalStepper from '../../components/common/HorizontalStepper';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
@@ -46,9 +48,21 @@ export default function ItemDetail() {
   );
 
   const owner     = getUserById(item.owner_id);
-  const reviews   = getItemReviews(item._id);
-  const avgRating = getAvgRating(item._id);
+  const [reviews, setReviews] = useState([]);
+  const [avgRating, setAvgRating] = useState(0);
   const isOwner   = currentUser?._id === item.owner_id;
+
+  useEffect(() => {
+    if (!item?._id) return;
+    api.get(`/api/reviews/item/${item._id}`)
+      .then(res => {
+        setReviews(res.data.reviews || []);
+        setAvgRating(res.data.avgRating || 0);
+      })
+      .catch(err => {
+        console.error('Failed to fetch reviews:', err);
+      });
+  }, [item?._id, reviewRefresh]);
 
   // Current user's request for this item
   const myRequest = currentUser
@@ -90,7 +104,7 @@ export default function ItemDetail() {
       if (myRequest.status === 'PENDING') return <div style={{ textAlign: 'center' }}><Badge status="PENDING" /> <p style={{ fontSize: '0.8rem', color: 'var(--color-text-light)', marginTop: '0.4rem' }}>Awaiting donor approval</p></div>;
       if (myRequest.status === 'APPROVED') return (
         <button id="confirm-pickup-btn" className="btn btn-primary" style={{ width: '100%' }}
-          onClick={() => { confirmPickup(myRequest._id); toast.success('Pickup Confirmed ✓', 'Donor has been notified.'); }}>
+          onClick={() => { confirmPickup(item._id, myRequest._id); toast.success('Pickup Confirmed ✓', 'Donor has been notified.'); }}>
           Confirm Pickup
         </button>
       );
@@ -197,6 +211,22 @@ export default function ItemDetail() {
 
               <p style={{ fontSize: '0.95rem', color: 'var(--color-text-mid)', lineHeight: 1.75 }}>{item.description}</p>
             </div>
+
+            {myRequest && (
+              <div style={{
+                background: '#fff',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-lg)',
+                padding: '1.5rem',
+                marginBottom: '2rem',
+                boxShadow: 'var(--shadow-sm)',
+              }}>
+                <h3 style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1rem', marginBottom: '1.25rem', color: 'var(--color-text-dark)' }}>
+                  Request Progress
+                </h3>
+                <HorizontalStepper type={item.type} status={myRequest.status} />
+              </div>
+            )}
 
             {/* Reviews section */}
             <section id="reviews-section">
