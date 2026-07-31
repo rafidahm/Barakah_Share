@@ -119,26 +119,6 @@ export default function Login() {
             Join hundreds of IIUC students already spreading barakah through resource sharing.
           </p>
         </div>
-
-        {/* Hint for demo */}
-        <div style={{
-          marginTop: '1.75rem',
-          background: 'rgba(255,255,255,0.2)',
-          backdropFilter: 'blur(8px)',
-          borderRadius: 'var(--radius-md)',
-          padding: '0.75rem 1.25rem',
-          border: '1px solid rgba(255,255,255,0.3)',
-          textAlign: 'center', maxWidth: 300,
-        }}>
-          <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '0.78rem', fontWeight: 600, marginBottom: '0.3rem' }}>
-            🔑 Demo credentials:
-          </p>
-          <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.75rem', lineHeight: 1.5 }}>
-            <strong>Admin:</strong> admin@iiuc.ac.bd<br/>
-            <strong>User:</strong> farhan@iiuc.ac.bd<br/>
-            <strong>Password:</strong> password123
-          </p>
-        </div>
       </div>
 
       {/* ─── RIGHT: Login Form (Image 4 layout reference) ────────── */}
