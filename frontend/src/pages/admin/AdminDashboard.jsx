@@ -257,7 +257,7 @@ export default function AdminDashboard() {
           </thead>
           <tbody>
             {requests.map(req => {
-              const item      = getItemById(req.item_id);
+              const item      = getItemById(req.item_id) || req.item;
               const requester = getUserById(req.requester_id);
               return (
                 <tr key={req._id} style={{ borderBottom: '1px solid var(--color-border)' }}

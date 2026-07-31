@@ -247,7 +247,7 @@ export default function UserDashboard() {
       )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {myRequests.map(req => {
-          const item = getItemById(req.item_id);
+          const item = getItemById(req.item_id) || req.item;
           if (!item) return null;
           return (
             <div key={req._id} className="card card-body animate-fade-up" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -306,7 +306,7 @@ export default function UserDashboard() {
       )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {myReviews.map(rv => {
-          const item = getItemById(rv.item_id);
+          const item = getItemById(rv.item_id) || rv.item;
           return (
             <div key={rv._id} className="card card-body animate-fade-up">
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
