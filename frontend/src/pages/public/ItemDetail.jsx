@@ -168,7 +168,7 @@ export default function ItemDetail() {
               marginBottom: '2rem', overflow: 'hidden', border: '1px solid var(--color-border)',
             }}>
               {item.image
-                ? <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ? <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '1rem' }} />
                 : <Package size={80} opacity={0.25} />
               }
             </div>

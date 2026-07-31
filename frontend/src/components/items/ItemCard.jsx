@@ -25,13 +25,13 @@ export default function ItemCard({ item, owner }) {
     >
       {/* Image / Color placeholder */}
       <div style={{
-        height: 180,
+        height: 200,
         background: bgColor,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         position: 'relative', overflow: 'hidden',
       }}>
         {item.image ? (
-          <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '0.5rem' }} />
         ) : (
           <Package size={52} color={`${bgColor.replace('f1','bb').replace('f6','aa')}`} opacity={0.6} />
         )}
