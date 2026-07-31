@@ -390,7 +390,7 @@ export default function AdminDashboard() {
 
         <div className="container" style={{ padding: '2.5rem 1.5rem', display: 'grid', gridTemplateColumns: '240px 1fr', gap: '2rem', alignItems: 'start' }}>
           <DashboardSidebar activeTab={tab} onTabChange={setTab} isAdmin={true} />
-          <div>{TABS[tab]}</div>
+          <div style={{ minWidth: 0 }}>{TABS[tab]}</div>
         </div>
       </main>
       <Footer />
