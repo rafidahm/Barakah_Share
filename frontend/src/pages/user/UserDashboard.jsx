@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 import DashboardSidebar from '../../components/dashboard/DashboardSidebar';
@@ -17,7 +18,7 @@ import { Plus, Package, Inbox, Star, CheckCircle, Eye, Trash2, Edit3, XCircle, P
 import { Link } from 'react-router-dom';
 
 export default function UserDashboard() {
-  const { currentUser } = useAuth();
+  const { currentUser, updateProfile } = useAuth();
   const toast = useToast();
   const {
     items, requests, reviews, users,
@@ -27,10 +28,27 @@ export default function UserDashboard() {
     rejectRequest, getItemById, getUserById, getItemRequests,
   } = useApp();
 
-  const [tab,         setTab]        = useState('profile');
-  const [itemModal,   setItemModal]  = useState(false);
-  const [editItem,    setEditItem]   = useState(null);
-  const [deleteConf,  setDeleteConf] = useState(null); // { itemId }
+  const [tab,          setTab]         = useState('profile');
+  const [itemModal,    setItemModal]   = useState(false);
+  const [editItem,     setEditItem]    = useState(null);
+  const [deleteConf,   setDeleteConf]  = useState(null); // { itemId }
+  const [profileModal, setProfileModal] = useState(false);
+  const [profileName,  setProfileName]  = useState('');
+  const [profileDept,  setProfileDept]  = useState('');
+  const [profileAvatar,setProfileAvatar] = useState('');
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('openPost') === 'true') {
+      setEditItem(null);
+      setItemModal(true);
+      // Clean up search param from url
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('openPost');
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   // User's own items
   const myItems = items.filter(i => i.owner_id === currentUser._id);
@@ -43,14 +61,22 @@ export default function UserDashboard() {
   const ProfileTab = () => (
     <div className="card card-body animate-fade-up" style={{ maxWidth: 500 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-        <div style={{
-          width: 64, height: 64, borderRadius: '50%',
-          background: getAvatarColor(currentUser.name),
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.4rem', color: '#fff',
-        }}>
-          {getInitials(currentUser.name)}
-        </div>
+        {currentUser.avatar ? (
+          <img
+            src={currentUser.avatar}
+            alt={currentUser.name}
+            style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--color-green-main)' }}
+          />
+        ) : (
+          <div style={{
+            width: 64, height: 64, borderRadius: '50%',
+            background: getAvatarColor(currentUser.name),
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.4rem', color: '#fff',
+          }}>
+            {getInitials(currentUser.name)}
+          </div>
+        )}
         <div>
           <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.2rem', color: 'var(--color-text-dark)' }}>{currentUser.name}</h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--color-text-light)' }}>{currentUser.email}</p>
@@ -59,7 +85,7 @@ export default function UserDashboard() {
       {[
         { label: 'Role',       value: currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1) },
         { label: 'Department', value: currentUser.department || '—' },
-        { label: 'Member since', value: formatDate(currentUser.joinedAt) },
+        { label: 'Member since', value: formatDate(currentUser.createdAt) },
         { label: 'Items Posted', value: myItems.length },
         { label: 'Requests Made', value: myRequests.length },
       ].map(({ label, value }) => (
@@ -68,7 +94,12 @@ export default function UserDashboard() {
           <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-dark)' }}>{value}</span>
         </div>
       ))}
-      <button className="btn btn-ghost btn-sm" style={{ marginTop: '1rem' }} onClick={() => toast.info('Edit Profile', 'Profile editing coming in Phase 2.')}>
+      <button className="btn btn-ghost btn-sm" style={{ marginTop: '1rem' }} onClick={() => {
+        setProfileName(currentUser.name);
+        setProfileDept(currentUser.department || '');
+        setProfileAvatar(currentUser.avatar || '');
+        setProfileModal(true);
+      }}>
         Edit Profile
       </button>
     </div>
@@ -324,6 +355,129 @@ export default function UserDashboard() {
         confirmLabel="Delete"
         confirmDanger={true}
       />
+
+      {/* Edit Profile Modal */}
+      <Modal isOpen={profileModal} onClose={() => setProfileModal(false)} title="Edit Profile" size="sm">
+        <form onSubmit={async (e) => {
+          e.preventDefault();
+          if (!profileName.trim()) {
+            toast.error('Error', 'Name is required.');
+            return;
+          }
+          const res = await updateProfile({
+            name: profileName,
+            department: profileDept,
+            avatar: profileAvatar
+          });
+          if (res.success) {
+            toast.success('Profile Updated ✓', 'Your changes have been saved.');
+            setProfileModal(false);
+          } else {
+            toast.error('Update Failed', res.error);
+          }
+        }}>
+          {/* Avatar upload from device */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+            <label className="form-label" style={{ fontWeight: 600, color: 'var(--color-text-mid)', fontSize: '0.85rem', width: '100%', textAlign: 'left' }}>Profile Photo</label>
+            <div style={{ position: 'relative', width: 90, height: 90 }}>
+              {profileAvatar ? (
+                <img
+                  src={profileAvatar}
+                  alt="Profile preview"
+                  style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--color-green-main)' }}
+                />
+              ) : (
+                <div style={{
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  background: getAvatarColor(profileName || currentUser.name),
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontFamily: 'Outfit',
+                  fontWeight: 800,
+                  fontSize: '2rem',
+                  color: '#fff',
+                }}>
+                  {getInitials(profileName || currentUser.name)}
+                </div>
+              )}
+            </div>
+            
+            <label
+              htmlFor="upload-avatar-file"
+              className="btn btn-ghost btn-sm"
+              style={{
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                border: '1px solid var(--color-border)',
+                background: 'var(--color-surface)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '0.4rem 0.8rem',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                color: 'var(--color-text-dark)',
+              }}
+            >
+              Choose from Device
+            </label>
+            <input
+              id="upload-avatar-file"
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  if (file.size > 2 * 1024 * 1024) {
+                    toast.error('File too large', 'Please choose an image under 2MB.');
+                    return;
+                  }
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setProfileAvatar(reader.result);
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+            />
+          </div>
+
+          <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+            <label className="form-label" htmlFor="edit-name" style={{ fontWeight: 600, color: 'var(--color-text-mid)', fontSize: '0.85rem' }}>Full Name</label>
+            <input
+              id="edit-name"
+              type="text"
+              className="form-input"
+              value={profileName}
+              onChange={(e) => setProfileName(e.target.value)}
+              required
+              style={{ width: '100%', marginTop: '0.4rem' }}
+            />
+          </div>
+          
+          <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+            <label className="form-label" htmlFor="edit-dept" style={{ fontWeight: 600, color: 'var(--color-text-mid)', fontSize: '0.85rem' }}>Department</label>
+            <input
+              id="edit-dept"
+              type="text"
+              placeholder="e.g. CSE, EEE"
+              className="form-input"
+              value={profileDept}
+              onChange={(e) => setProfileDept(e.target.value)}
+              style={{ width: '100%', marginTop: '0.4rem' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setProfileModal(false)}>Cancel</button>
+            <button type="submit" className="btn btn-primary btn-sm">Save Changes</button>
+          </div>
+        </form>
+      </Modal>
 
       <style>{`@media(max-width:768px){ #user-dashboard > div.container { grid-template-columns: 1fr !important; } }`}</style>
     </>

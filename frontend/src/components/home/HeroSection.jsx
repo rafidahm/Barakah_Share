@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { Search, Heart, ArrowUpRight, BookOpen, Calculator, Laptop, Beaker, Music } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 // Image 1: Hero giving hands illustration
 import heroImg from '../../assets/hero-giving.png';
@@ -15,6 +15,7 @@ const POPULAR_TAGS = [
 ];
 
 export default function HeroSection() {
+  const { currentUser } = useAuth();
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
 
@@ -185,7 +186,7 @@ export default function HeroSection() {
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
             <Link
               id="hero-donate-btn"
-              to="/items"
+              to={currentUser ? "/dashboard?openPost=true" : "/login?redirect=%2Fdashboard%3FopenPost%3Dtrue"}
               className="btn btn-primary btn-lg"
             >
               <Heart size={18} /> Donate Now
