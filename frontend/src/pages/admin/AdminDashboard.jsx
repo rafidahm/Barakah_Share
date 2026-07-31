@@ -91,7 +91,7 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+        <div id="overview-bottom-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
           <div className="card card-body">
             <h3 style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.95rem', marginBottom: '1rem', color: 'var(--color-text-dark)' }}>Items by Category</h3>
             <CategoryPieChart />
@@ -153,8 +153,8 @@ export default function AdminDashboard() {
   const UsersTab = () => (
     <div>
       <h2 style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.1rem', marginBottom: '1.5rem', color: 'var(--color-text-dark)' }}>All Users ({users.length})</h2>
-      <div style={{ background: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <div style={{ background: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <table style={{ width: '100%', minWidth: 600, borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: 'var(--color-mint-pale)', borderBottom: '1px solid var(--color-border)' }}>
               {['User','Email','Department','Role','Actions'].map(h => (
@@ -206,8 +206,8 @@ export default function AdminDashboard() {
         <h2 style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.1rem', color: 'var(--color-text-dark)' }}>All Items ({items.length})</h2>
         <button id="admin-add-item-btn" className="btn btn-primary btn-sm" onClick={() => { setEditItem(null); setItemModal(true); }}>+ Add Item</button>
       </div>
-      <div style={{ background: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <div style={{ background: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <table style={{ width: '100%', minWidth: 700, borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: 'var(--color-mint-pale)', borderBottom: '1px solid var(--color-border)' }}>
               {['Item','Category','Type','Status','Owner','Actions'].map(h => (
@@ -252,8 +252,8 @@ export default function AdminDashboard() {
   const RequestsTab = () => (
     <div>
       <h2 style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.1rem', marginBottom: '1.5rem', color: 'var(--color-text-dark)' }}>All Requests ({requests.length})</h2>
-      <div style={{ background: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <div style={{ background: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <table style={{ width: '100%', minWidth: 650, borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: 'var(--color-mint-pale)', borderBottom: '1px solid var(--color-border)' }}>
               {['Item','Requester','Type','Status','Date','Actions'].map(h => (
@@ -347,8 +347,8 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* Charts */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+        {/* Charts — stacked on mobile, 2-col on desktop */}
+        <div id="analytics-charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
           <div className="card card-body">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
               <span style={{ width: 12, height: 12, borderRadius: 3, background: 'linear-gradient(135deg,#f59e0b,#fbbf24)', display: 'inline-block' }} />
@@ -411,6 +411,14 @@ export default function AdminDashboard() {
             grid-template-columns: 1fr !important;
             padding: 1.25rem 1rem !important;
             gap: 0 !important;
+          }
+          /* Overview: stack 2-col grids to single column */
+          #overview-bottom-grid {
+            grid-template-columns: 1fr !important;
+          }
+          /* Analytics: stack charts vertically */
+          #analytics-charts-grid {
+            grid-template-columns: 1fr !important;
           }
         }
         @media (max-width: 900px) { #admin-dashboard table { font-size: 0.78rem; } }
