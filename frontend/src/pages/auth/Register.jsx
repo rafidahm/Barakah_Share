@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Eye, EyeOff, Leaf, User, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -10,6 +10,8 @@ export default function Register() {
   const { register: registerUser, loginWithGoogle } = useAuth();
   const toast    = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/';
 
   const [showPass, setShowPass]   = useState(false);
   const [loading, setLoading]     = useState(false);
@@ -25,7 +27,7 @@ export default function Register() {
     setLoading(false);
     if (result.success) {
       toast.success('Account Created!', `Welcome to BarakahShare, ${result.user.name.split(' ')[0]}!`);
-      navigate('/dashboard');
+      navigate(redirectTo);
     } else {
       toast.error('Registration Failed', result.error);
     }
@@ -38,7 +40,7 @@ export default function Register() {
     setGoogleLoad(false);
     if (result.success) {
       toast.success('Logged in with Google!', `Welcome to BarakahShare!`);
-      navigate('/dashboard');
+      navigate(redirectTo);
     } else {
       toast.error('Google Sign-In Failed', result.error);
     }

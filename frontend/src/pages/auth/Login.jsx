@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Eye, EyeOff, Leaf, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -12,6 +12,8 @@ export default function Login() {
   const { login, loginWithGoogle } = useAuth();
   const toast    = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/';
 
   const [showPass, setShowPass]   = useState(false);
   const [loading, setLoading]     = useState(false);
@@ -26,7 +28,7 @@ export default function Login() {
     setLoading(false);
     if (result.success) {
       toast.success('Welcome Back!', `Hello, ${result.user.name.split(' ')[0]}!`);
-      navigate(result.user.role === 'admin' ? '/dashboard/admin' : '/dashboard');
+      navigate(redirectTo);
     } else {
       toast.error('Login Failed', result.error);
     }
@@ -39,7 +41,7 @@ export default function Login() {
     setGoogleLoad(false);
     if (result.success) {
       toast.success('Logged in with Google!', `Welcome to BarakahShare!`);
-      navigate('/dashboard');
+      navigate(redirectTo);
     } else {
       toast.error('Google Sign-In Failed', result.error);
     }

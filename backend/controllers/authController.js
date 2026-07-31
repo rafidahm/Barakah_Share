@@ -127,10 +127,11 @@ exports.getMe = async (req, res) => {
  */
 exports.updateMe = async (req, res) => {
   try {
-    const { name, department } = req.body;
+    const { name, department, avatar } = req.body;
     const updates = {};
-    if (name)       updates.name       = name.trim();
-    if (department) updates.department = department.trim();
+    if (name !== undefined)       updates.name       = name.trim();
+    if (department !== undefined) updates.department = department.trim();
+    if (avatar !== undefined)     updates.avatar     = avatar.trim();
 
     const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true, runValidators: true });
 
