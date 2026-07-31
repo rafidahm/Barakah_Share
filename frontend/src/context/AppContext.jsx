@@ -34,7 +34,7 @@ export function AppProvider({ children }) {
           const [itemsRes, requestsRes, reviewsRes, usersRes] = await Promise.allSettled([
             api.get('/api/items?status=all&limit=500'),       // ALL items regardless of status
             api.get('/api/requests').catch(() => api.get('/api/requests/incoming')), // admin all or fallback
-            api.get('/api/reviews/my'),
+            api.get('/api/reviews').catch(() => api.get('/api/reviews/my')),          // admin all or fallback
             api.get('/api/auth/users'),
           ]);
 

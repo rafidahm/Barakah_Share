@@ -253,7 +253,7 @@ export default function ItemDetail() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
                   {reviews.map(rv => (
-                    <ReviewCard key={rv._id} review={rv} reviewer={getUserById(rv.reviewer_id)} />
+                    <ReviewCard key={rv._id} review={rv} reviewer={rv.reviewer || getUserById(rv.reviewer_id)} />
                   ))}
                 </div>
 
