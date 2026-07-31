@@ -49,8 +49,22 @@ export function AuthProvider({ children }) {
           setCurrentUser(null);
         }
       } else {
-        localStorage.removeItem('bs_token');
-        setCurrentUser(null);
+        // No Firebase session — but the user may have logged in via backend JWT.
+        // Check if there's a valid JWT token before clearing the session.
+        const existingToken = localStorage.getItem('bs_token');
+        if (existingToken) {
+          try {
+            // Validate the token against the backend
+            const res = await api.get('/api/auth/me');
+            setCurrentUser(res.data.user);
+          } catch {
+            // JWT is invalid or expired — clear everything
+            localStorage.removeItem('bs_token');
+            setCurrentUser(null);
+          }
+        } else {
+          setCurrentUser(null);
+        }
       }
       setLoading(false);
     });
