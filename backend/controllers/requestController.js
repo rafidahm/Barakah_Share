@@ -356,3 +356,23 @@ exports.rejectRequest = async (req, res) => {
     res.status(500).json({ success: false, message: 'Rejection failed.', error: err.message });
   }
 };
+
+// ── GET /api/requests/incoming ────────────────────────────────
+/**
+ * Get all requests made by other users on items owned by the logged-in user
+ */
+exports.getIncomingRequests = async (req, res) => {
+  try {
+    const myItems = await Item.find({ owner: req.user._id });
+    const myItemIds = myItems.map(item => item._id);
+
+    const requests = await Request.find({ item: { $in: myItemIds } })
+      .populate('item', 'name type status category condition owner')
+      .populate('requester', 'name email department avatar')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, count: requests.length, requests });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Could not fetch incoming requests.', error: err.message });
+  }
+};

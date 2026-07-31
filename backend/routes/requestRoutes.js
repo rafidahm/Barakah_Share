@@ -12,6 +12,9 @@ router.post('/', ctrl.createRequest);
 // Get logged-in user's own requests
 router.get('/my', ctrl.getMyRequests);
 
+// Get incoming requests on user's owned items
+router.get('/incoming', ctrl.getIncomingRequests);
+
 // Admin: get all requests
 router.get('/', verifyAdmin, ctrl.getAllRequests);
 
