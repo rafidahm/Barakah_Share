@@ -163,35 +163,46 @@ export default function UserDashboard() {
                   <p style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-text-light)', marginBottom: '0.5rem' }}>
                     {pendingReqs.length} Pending Request{pendingReqs.length > 1 ? 's' : ''}
                   </p>
-                  {pendingReqs.map(req => {
-                    const requester = getUserById(req.requester_id);
-                    return (
-                      <div key={req._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', padding: '0.4rem 0', borderBottom: '1px solid var(--color-border)' }}>
-                        <span style={{ fontSize: '0.85rem', color: 'var(--color-text-dark)', fontWeight: 500 }}>{requester?.name || 'Unknown'}</span>
-                        <div style={{ display: 'flex', gap: '0.4rem' }}>
-                          <button
-                            id={`approve-req-${req._id}`}
-                            className="btn btn-primary btn-sm"
-                            onClick={() => {
-                              if (item.type === 'DONATE') approveReceiver(item._id, req._id);
-                              else approveBorrower(item._id, req._id);
-                              toast.success('Request Approved ✓', `${requester?.name} has been approved.`);
-                            }}
-                          >
-                            <CheckCircle size={12} /> Approve
-                          </button>
-                          <button
-                            id={`reject-req-${req._id}`}
-                            className="btn btn-ghost btn-sm"
-                            style={{ color: '#c62828' }}
-                            onClick={() => { rejectRequest(req._id); toast.info('Request Rejected', `${requester?.name}'s request was rejected.`); }}
-                          >
-                            <XCircle size={12} /> Reject
-                          </button>
+                    {pendingReqs.map(req => {
+                      const requesterName = getUserById(req.requester_id)?.name || req.requester?.name || 'Unknown';
+                      return (
+                        <div key={req._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', padding: '0.4rem 0', borderBottom: '1px solid var(--color-border)' }}>
+                          <span style={{ fontSize: '0.85rem', color: 'var(--color-text-dark)', fontWeight: 500 }}>{requesterName}</span>
+                          <div style={{ display: 'flex', gap: '0.4rem' }}>
+                            <button
+                              id={`approve-req-${req._id}`}
+                              className="btn btn-primary btn-sm"
+                              onClick={async () => {
+                                try {
+                                  if (item.type === 'DONATE') await approveReceiver(item._id, req._id);
+                                  else await approveBorrower(item._id, req._id);
+                                  toast.success('Request Approved ✓', `${requesterName} has been approved.`);
+                                } catch (err) {
+                                  toast.error('Action Failed', err.response?.data?.message || 'Could not approve request.');
+                                }
+                              }}
+                            >
+                              <CheckCircle size={12} /> Approve
+                            </button>
+                            <button
+                              id={`reject-req-${req._id}`}
+                              className="btn btn-ghost btn-sm"
+                              style={{ color: '#c62828' }}
+                              onClick={async () => {
+                                try {
+                                  await rejectRequest(req._id);
+                                  toast.info('Request Rejected', `${requesterName}'s request was rejected.`);
+                                } catch (err) {
+                                  toast.error('Action Failed', err.response?.data?.message || 'Could not reject request.');
+                                }
+                              }}
+                            >
+                              <XCircle size={12} /> Reject
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
                 </div>
               )}
 
@@ -201,21 +212,35 @@ export default function UserDashboard() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
                     <div>
                       <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-text-mid)', margin: 0 }}>
-                        Active request by: <strong style={{ color: 'var(--color-text-dark)' }}>{getUserById(approvedReq.requester_id)?.name || 'Requester'}</strong>
+                        Active request by: <strong style={{ color: 'var(--color-text-dark)' }}>{getUserById(approvedReq.requester_id)?.name || approvedReq.requester?.name || 'Requester'}</strong>
                       </p>
                     </div>
                     <div>
                       {/* DONATE: confirm delivery when RECEIVED */}
                       {item.type === 'DONATE' && approvedReq.status === 'RECEIVED' && (
                         <button id={`confirm-delivery-${item._id}`} className="btn btn-primary btn-sm"
-                          onClick={() => { confirmDelivery(item._id, approvedReq._id); toast.success('Donation Delivered ✓', 'Donation marked as completed.'); }}>
+                          onClick={async () => {
+                            try {
+                              await confirmDelivery(item._id, approvedReq._id);
+                              toast.success('Donation Delivered ✓', 'Donation marked as completed.');
+                            } catch (err) {
+                              toast.error('Action Failed', err.response?.data?.message || 'Could not confirm delivery.');
+                            }
+                          }}>
                           Confirm Delivery
                         </button>
                       )}
                       {/* LEND: confirm return when PENDING_RETURN */}
                       {item.type === 'LEND' && approvedReq.status === 'PENDING_RETURN' && (
                         <button id={`confirm-return-${item._id}`} className="btn btn-primary btn-sm"
-                          onClick={() => { confirmReturn(item._id, approvedReq._id); toast.success('Return Confirmed ✓', 'Item is available again.'); }}>
+                          onClick={async () => {
+                            try {
+                              await confirmReturn(item._id, approvedReq._id);
+                              toast.success('Return Confirmed ✓', 'Item is available again.');
+                            } catch (err) {
+                              toast.error('Action Failed', err.response?.data?.message || 'Could not confirm return.');
+                            }
+                          }}>
                           Confirm Return
                         </button>
                       )}
@@ -264,19 +289,40 @@ export default function UserDashboard() {
                 <div>
                   {item.type === 'DONATE' && req.status === 'APPROVED' && (
                     <button id={`pickup-${req._id}`} className="btn btn-primary btn-sm"
-                      onClick={() => { confirmPickup(item._id, req._id); toast.success('Pickup Confirmed ✓', 'Donor has been notified.'); }}>
+                      onClick={async () => {
+                        try {
+                          await confirmPickup(item._id, req._id);
+                          toast.success('Pickup Confirmed ✓', 'Donor has been notified.');
+                        } catch (err) {
+                          toast.error('Action Failed', err.response?.data?.message || 'Could not confirm pickup.');
+                        }
+                      }}>
                       Confirm Pickup
                     </button>
                   )}
                   {item.type === 'LEND' && req.status === 'APPROVED' && (
                     <button id={`receipt-${req._id}`} className="btn btn-primary btn-sm"
-                      onClick={() => { confirmReceipt(item._id, req._id); toast.success('Receipt Confirmed ✓', 'Item marked as In Use.'); }}>
+                      onClick={async () => {
+                        try {
+                          await confirmReceipt(item._id, req._id);
+                          toast.success('Receipt Confirmed ✓', 'Item marked as In Use.');
+                        } catch (err) {
+                          toast.error('Action Failed', err.response?.data?.message || 'Could not confirm receipt.');
+                        }
+                      }}>
                       Confirm Receipt
                     </button>
                   )}
                   {item.type === 'LEND' && req.status === 'IN_USE' && (
                     <button id={`return-${req._id}`} className="btn btn-secondary btn-sm"
-                      onClick={() => { initiateReturn(item._id, req._id); toast.info('Return Initiated', 'Awaiting lender confirmation.'); }}>
+                      onClick={async () => {
+                        try {
+                          await initiateReturn(item._id, req._id);
+                          toast.info('Return Initiated', 'Awaiting lender confirmation.');
+                        } catch (err) {
+                          toast.error('Action Failed', err.response?.data?.message || 'Could not initiate return.');
+                        }
+                      }}>
                       Initiate Return
                     </button>
                   )}

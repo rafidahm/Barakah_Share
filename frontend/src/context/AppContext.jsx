@@ -14,9 +14,9 @@ export function AppProvider({ children }) {
   const [loading,  setLoading]  = useState(true);
 
   // ── Load all data on mount ───────────────────────────────────
-  const fetchAll = useCallback(async () => {
+  const fetchAll = useCallback(async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const token = localStorage.getItem('bs_token');
 
       if (token) {
@@ -147,43 +147,51 @@ export function AppProvider({ children }) {
   const approveReceiver = async (itemId, requestId) => {
     const res = await api.patch(`/api/requests/${requestId}/approve`);
     _applyLifecycle(itemId, requestId, res.data.item, res.data.request);
+    await fetchAll(false);
   };
 
   const confirmPickup = async (itemId, requestId) => {
     const res = await api.patch(`/api/requests/${requestId}/confirm-pickup`);
     _applyLifecycle(itemId, requestId, res.data.item, res.data.request);
+    await fetchAll(false);
   };
 
   const confirmDelivery = async (itemId, requestId) => {
     const res = await api.patch(`/api/requests/${requestId}/confirm-delivery`);
     _applyLifecycle(itemId, requestId, res.data.item, res.data.request);
+    await fetchAll(false);
   };
 
   // ── LENDING TRACK ────────────────────────────────────────────
   const approveBorrower = async (itemId, requestId) => {
     const res = await api.patch(`/api/requests/${requestId}/approve-borrower`);
     _applyLifecycle(itemId, requestId, res.data.item, res.data.request);
+    await fetchAll(false);
   };
 
   const confirmReceipt = async (itemId, requestId) => {
     const res = await api.patch(`/api/requests/${requestId}/confirm-receipt`);
     _applyLifecycle(itemId, requestId, res.data.item, res.data.request);
+    await fetchAll(false);
   };
 
   const initiateReturn = async (itemId, requestId) => {
     const res = await api.patch(`/api/requests/${requestId}/initiate-return`);
     _applyLifecycle(itemId, requestId, res.data.item, res.data.request);
+    await fetchAll(false);
   };
 
   const confirmReturn = async (itemId, requestId) => {
     const res = await api.patch(`/api/requests/${requestId}/confirm-return`);
     _applyLifecycle(itemId, requestId, res.data.item, res.data.request);
+    await fetchAll(false);
   };
 
   // ── Reject request ───────────────────────────────────────────
   const rejectRequest = async (requestId) => {
     const res = await api.patch(`/api/requests/${requestId}/reject`);
     setRequests(prev => prev.map(r => r._id === requestId ? res.data.request : r));
+    await fetchAll(false);
   };
 
   // ── Reviews ──────────────────────────────────────────────────

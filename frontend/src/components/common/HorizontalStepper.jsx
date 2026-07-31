@@ -93,8 +93,9 @@ export default function HorizontalStepper({ type, status }) {
 
         {/* Steps */}
         {steps.map((step, idx) => {
-          const isCompleted = idx < activeIndex;
-          const isActive = idx === activeIndex;
+          const isFinalState = status === 'COMPLETED' || status === 'RETURNED';
+          const isCompleted = isFinalState ? true : idx < activeIndex;
+          const isActive = isFinalState ? false : idx === activeIndex;
 
           let stepStatusText = 'Pending';
           if (isActive) {
