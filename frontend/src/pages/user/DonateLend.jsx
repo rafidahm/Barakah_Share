@@ -21,6 +21,7 @@ export default function DonateLend() {
 
   const [loading, setLoading] = useState(false);
   const [itemImage, setItemImage] = useState(null);
+  const [imageError, setImageError] = useState(false);
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
     defaultValues: {
@@ -62,6 +63,12 @@ export default function DonateLend() {
   }, [editId, items, isEdit, currentUser, reset, navigate]);
 
   const onSubmit = async (data) => {
+    // Image is required for new posts
+    if (!isEdit && !itemImage) {
+      setImageError(true);
+      return;
+    }
+    setImageError(false);
     setLoading(true);
     try {
       if (isEdit) {
@@ -99,6 +106,7 @@ export default function DonateLend() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setItemImage(reader.result);
+        setImageError(false); // clear error once image is selected
       };
       reader.readAsDataURL(file);
     }
@@ -214,7 +222,7 @@ export default function DonateLend() {
 
             {/* Product Image File Selector */}
             <div className="form-group" style={{ marginBottom: '2rem' }}>
-              <label className="form-label" style={{ fontWeight: 600, fontSize: '0.85rem', display: 'block', marginBottom: '0.4rem' }}>Product Image</label>
+              <label className="form-label" style={{ fontWeight: 600, fontSize: '0.85rem', display: 'block', marginBottom: '0.4rem' }}>Product Image {!isEdit && '*'}</label>
               
               {itemImage ? (
                 <div style={{ position: 'relative', width: '100%', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--color-border)', background: 'var(--color-mint-pale)', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px' }}>
@@ -233,25 +241,25 @@ export default function DonateLend() {
                 <label 
                   htmlFor="product-image-upload" 
                   style={{
-                    border: '2px dashed var(--color-border)', 
+                    border: `2px dashed ${imageError ? '#d32f2f' : 'var(--color-border)'}`, 
                     borderRadius: 'var(--radius-md)',
                     padding: '2.5rem 1.5rem', 
                     display: 'flex', 
                     flexDirection: 'column',
                     alignItems: 'center', 
                     gap: '0.6rem', 
-                    background: 'var(--color-mint-pale)',
+                    background: imageError ? '#fff5f5' : 'var(--color-mint-pale)',
                     color: 'var(--color-text-mid)', 
                     fontSize: '0.85rem',
                     cursor: 'pointer',
                     transition: 'border-color 0.2s ease'
                   }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-green-main)'}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = imageError ? '#b71c1c' : 'var(--color-green-main)'}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = imageError ? '#d32f2f' : 'var(--color-border)'}
                 >
-                  <Image size={28} opacity={0.6} color="var(--color-green-main)" />
-                  <span style={{ fontWeight: 600, color: 'var(--color-text-dark)' }}>Upload Product Photo</span>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--color-text-light)' }}>Click to browse from your device (Max 3MB)</span>
+                  <Image size={28} opacity={0.6} color={imageError ? '#d32f2f' : 'var(--color-green-main)'} />
+                  <span style={{ fontWeight: 600, color: imageError ? '#d32f2f' : 'var(--color-text-dark)' }}>Upload Product Photo</span>
+                  <span style={{ fontSize: '0.75rem', color: imageError ? '#d32f2f' : 'var(--color-text-light)' }}>Click to browse from your device (Max 3MB)</span>
                 </label>
               )}
               
@@ -262,6 +270,9 @@ export default function DonateLend() {
                 style={{ display: 'none' }} 
                 onChange={handleImageChange}
               />
+              {imageError && (
+                <p className="form-error" style={{ marginTop: '0.4rem' }}>Product image is required.</p>
+              )}
             </div>
 
             {/* Actions */}
