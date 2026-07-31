@@ -9,10 +9,11 @@ import { getInitials, getAvatarColor } from '../../utils/helpers';
 import { useToast } from '../../hooks/useToast';
 
 const NAV_LINKS = [
-  { to: '/',       label: 'Home' },
-  { to: '/about',  label: 'About' },
-  { to: '/items',  label: 'Browse Items' },
-  { to: '/contact',label: 'Contact' },
+  { to: '/',            label: 'Home' },
+  { to: '/items',       label: 'Browse Item' },
+  { to: '/donate-lend', label: 'Donate/lend' },
+  { to: '/contact',     label: 'Contact' },
+  { to: '/about',       label: 'About' },
 ];
 
 export default function Navbar() {
@@ -60,12 +61,13 @@ export default function Navbar() {
         transition: 'all 0.3s ease',
       }}
     >
-      <div className="container" style={{ display: 'flex', alignItems: 'center', height: '68px', gap: '2rem' }}>
+      <div className="container navbar-container" style={{ display: 'flex', alignItems: 'center', height: '68px', gap: '2rem' }}>
 
         {/* Logo */}
         <Link
           to="/"
           id="navbar-logo"
+          className="navbar-logo"
           style={{
             display: 'flex', alignItems: 'center', gap: '0.5rem',
             fontFamily: 'Outfit, sans-serif', fontWeight: 800,
@@ -73,7 +75,7 @@ export default function Navbar() {
             textDecoration: 'none', flexShrink: 0,
           }}
         >
-          <span style={{
+          <span className="navbar-logo-icon" style={{
             width: 36, height: 36, borderRadius: '10px',
             background: 'linear-gradient(135deg, var(--color-green-main), var(--color-teal-mid))',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -84,7 +86,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Nav Links */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flex: 1 }}>
+        <nav style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginLeft: 'auto' }}>
           {NAV_LINKS.map(({ to, label }) => (
             <NavLink
               key={to}
@@ -109,7 +111,7 @@ export default function Navbar() {
         </nav>
 
         {/* Right side */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginLeft: 'auto' }}>
+        <div className="nav-right-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           {currentUser ? (
             <div ref={dropRef} style={{ position: 'relative' }}>
               <button
@@ -127,19 +129,27 @@ export default function Navbar() {
                 aria-expanded={dropOpen}
                 aria-haspopup="true"
               >
-                <span style={{
-                  width: 32, height: 32, borderRadius: '50%',
-                  background: getAvatarColor(currentUser.name),
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontFamily: 'Outfit, sans-serif', fontWeight: 700,
-                  fontSize: '0.8rem', color: '#fff', flexShrink: 0,
-                }}>
-                  {getInitials(currentUser.name)}
-                </span>
-                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-dark)', maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {currentUser.avatar ? (
+                  <img
+                    src={currentUser.avatar}
+                    alt={currentUser.name}
+                    style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                  />
+                ) : (
+                  <span style={{
+                    width: 32, height: 32, borderRadius: '50%',
+                    background: getAvatarColor(currentUser.name),
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontFamily: 'Outfit, sans-serif', fontWeight: 700,
+                    fontSize: '0.8rem', color: '#fff', flexShrink: 0,
+                  }}>
+                    {getInitials(currentUser.name)}
+                  </span>
+                )}
+                <span className="nav-username" style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-dark)', maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {currentUser.name.split(' ')[0]}
                 </span>
-                <ChevronDown size={14} color="var(--color-text-light)" style={{ transform: dropOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                <ChevronDown className="nav-chevron" size={14} color="var(--color-text-light)" style={{ transform: dropOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
               </button>
 
               {/* Dropdown */}
@@ -242,10 +252,17 @@ export default function Navbar() {
 
       <style>{`
         @media (max-width: 768px) {
+          .navbar-container { gap: 0.5rem !important; padding: 0 1rem !important; }
+          .navbar-logo { font-size: 1.15rem !important; }
+          .navbar-logo-icon { width: 30px !important; height: 30px !important; border-radius: 8px !important; }
+          .navbar-logo-icon svg { width: 15px !important; height: 15px !important; }
           .mobile-hamburger { display: flex !important; }
           nav { display: none !important; }
           #nav-login-btn, #nav-register-btn { display: none !important; }
-          #user-avatar-btn { display: none !important; }
+          .nav-username { display: none !important; }
+          .nav-chevron { display: none !important; }
+          .nav-right-actions { margin-left: auto !important; gap: 0.5rem !important; }
+          #user-avatar-btn { padding: 0.25rem !important; border: none !important; background: transparent !important; }
         }
       `}</style>
     </header>

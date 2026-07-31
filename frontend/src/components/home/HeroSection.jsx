@@ -8,10 +8,8 @@ import heroImg from '../../assets/hero-giving.png';
 
 const POPULAR_TAGS = [
   { label: 'Books',      icon: <BookOpen size={13} />,    category: 'Books' },
-  { label: 'Calculator', icon: <Calculator size={13} />,  category: 'Calculators' },
-  { label: 'Laptop',     icon: <Laptop size={13} />,      category: 'Electronics' },
-  { label: 'Lab Kit',    icon: <Beaker size={13} />,      category: 'Lab Equipment' },
   { label: 'Instrument', icon: <Music size={13} />,        category: 'Instruments' },
+  { label: 'Lab Kit',    icon: <Beaker size={13} />,      category: 'Lab Equipment' },
 ];
 
 export default function HeroSection() {
@@ -65,7 +63,7 @@ export default function HeroSection() {
         {/* ─── LEFT: Text Content ─────────────────────────────── */}
         <div className="animate-fade-left">
           {/* Label chip */}
-          <span style={{
+          <span className="hero-badge" style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
             background: 'rgba(116,171,139,0.18)',
             border: '1px solid rgba(116,171,139,0.35)',
@@ -99,7 +97,7 @@ export default function HeroSection() {
             </span>
           </h1>
 
-          <p style={{
+          <p className="hero-desc" style={{
             fontSize: '1.1rem',
             color: 'var(--color-text-mid)',
             lineHeight: 1.75,
@@ -134,6 +132,7 @@ export default function HeroSection() {
                   border: 'none', outline: 'none',
                   fontSize: '0.95rem', color: 'var(--color-text-dark)',
                   background: 'transparent',
+                  minWidth: 0,
                 }}
               />
               <button
@@ -148,7 +147,7 @@ export default function HeroSection() {
           </form>
 
           {/* Popular tags */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '2rem' }}>
+          <div className="hero-tags" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '2rem' }}>
             <span style={{ fontSize: '0.82rem', color: 'var(--color-text-light)', alignSelf: 'center' }}>Popular:</span>
             {POPULAR_TAGS.map(({ label, icon, category }) => (
               <button
@@ -183,10 +182,10 @@ export default function HeroSection() {
           </div>
 
           {/* CTA Buttons */}
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          <div className="hero-ctas" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
             <Link
               id="hero-donate-btn"
-              to={currentUser ? "/dashboard?openPost=true" : "/login?redirect=%2Fdashboard%3FopenPost%3Dtrue"}
+              to={currentUser ? "/donate-lend" : "/login?redirect=%2Fdonate-lend"}
               className="btn btn-primary btn-lg"
             >
               <Heart size={18} /> Donate Now
@@ -284,9 +283,13 @@ export default function HeroSection() {
             grid-template-columns: 1fr !important;
             text-align: center;
             gap: 2rem !important;
-            padding: 3rem 1.5rem !important;
+            padding: 3rem 1rem !important;
           }
-          #hero-section form > div { max-width: 100% !important; }
+          .hero-badge { margin: 0 auto 1.25rem !important; display: inline-flex !important; }
+          .hero-desc { margin: 0 auto 2rem !important; }
+          #hero-section form > div { margin: 0 auto !important; max-width: 100% !important; }
+          .hero-tags { justify-content: center !important; }
+          .hero-ctas { justify-content: center !important; }
           #hero-section .btn-lg { flex: 1; justify-content: center; }
           #hero-section > .container > div:last-child { display: none !important; }
         }

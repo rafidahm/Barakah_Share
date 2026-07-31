@@ -1,17 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Users, Package, HandHeart, RefreshCw } from 'lucide-react';
-
-const STATS = [
-  { icon: <Package    size={24} />, value: 247, label: 'Items Shared',          suffix: '+' },
-  { icon: <RefreshCw  size={24} />, value: 189, label: 'Successful Borrowings', suffix: '+' },
-  { icon: <Users      size={24} />, value: 412, label: 'Active Students',        suffix: '+' },
-  { icon: <HandHeart  size={24} />, value: 156, label: 'Donations Completed',    suffix: '' },
-];
+import api from '../../services/api';
 
 function useCountUp(target, isVisible, duration = 1800) {
   const [count, setCount] = useState(0);
   useEffect(() => {
-    if (!isVisible) return;
+    if (!isVisible || target === 0) return;
     let start = 0;
     const step = Math.ceil(target / (duration / 16));
     const timer = setInterval(() => {
@@ -59,7 +53,7 @@ function StatCard({ icon, value, label, suffix, isVisible, delay }) {
         {icon}
       </div>
       <p style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '2.2rem', color: 'var(--color-text-dark)', lineHeight: 1 }}>
-        {count}{suffix}
+        {value > 0 ? `${count}${suffix}` : '—'}
       </p>
       <p style={{ fontSize: '0.9rem', color: 'var(--color-text-light)', marginTop: '0.4rem', fontWeight: 500 }}>
         {label}
@@ -71,6 +65,7 @@ function StatCard({ icon, value, label, suffix, isVisible, delay }) {
 export default function StatsCounter() {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
+  const [stats, setStats] = useState({ totalItems: 0, completedExchanges: 0, totalUsers: 0 });
 
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -80,6 +75,19 @@ export default function StatsCounter() {
     if (ref.current) obs.observe(ref.current);
     return () => obs.disconnect();
   }, []);
+
+  useEffect(() => {
+    api.get('/api/stats')
+      .then(res => { if (res.data?.stats) setStats(res.data.stats); })
+      .catch(() => {}); // silently fail — shows '—' if unavailable
+  }, []);
+
+  const STAT_CARDS = [
+    { icon: <Package   size={24} />, value: stats.totalItems,        label: 'Items Shared',         suffix: '+' },
+    { icon: <RefreshCw size={24} />, value: stats.completedExchanges, label: 'Completed Exchanges',  suffix: '+' },
+    { icon: <Users     size={24} />, value: stats.totalUsers,         label: 'Active Students',      suffix: '+' },
+    { icon: <HandHeart size={24} />, value: stats.completedExchanges, label: 'Donations Completed',  suffix: '' },
+  ];
 
   return (
     <section id="stats-section" ref={ref} className="section" style={{ background: 'var(--color-mint-pale)' }}>
@@ -92,7 +100,7 @@ export default function StatsCounter() {
           </p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem' }}>
-          {STATS.map((s, i) => <StatCard key={s.label} {...s} isVisible={visible} delay={i * 0.1} />)}
+          {STAT_CARDS.map((s, i) => <StatCard key={s.label} {...s} isVisible={visible} delay={i * 0.1} />)}
         </div>
       </div>
       <style>{`@media(max-width:768px){#stats-section .container > div:last-child{grid-template-columns:repeat(2,1fr)!important;}}`}</style>

@@ -3,10 +3,12 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { AppProvider }  from './context/AppContext';
 import AppRouter from './routes/AppRouter';
+import ScrollToTop from './components/common/ScrollToTop';
 
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AuthProvider>
         <AppProvider>
           <AppRouter />

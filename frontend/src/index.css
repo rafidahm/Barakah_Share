@@ -57,6 +57,7 @@
 html {
   scroll-behavior: smooth;
   font-size: 16px;
+  overflow-x: hidden;
 }
 
 body {
@@ -124,6 +125,11 @@ input, textarea, select {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1.5rem;
+}
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
+  }
 }
 
 /* Section spacing */
