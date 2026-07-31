@@ -165,7 +165,7 @@ export default function Footer() {
             flexWrap: 'wrap', gap: '0.75rem',
           }}>
             <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.45)' }}>
-              © {new Date().getFullYear()} BarakahShare. Made with <Heart size={11} style={{ display: 'inline', color: 'var(--color-green-main)', verticalAlign: 'middle' }} /> for the IIUC community.
+              © {new Date().getFullYear()} BarakahShare. All rights reserved.
             </p>
             <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.35)' }}>
               Spreading barakah, one share at a time.
