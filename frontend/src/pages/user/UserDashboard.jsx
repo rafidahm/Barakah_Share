@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 import DashboardSidebar from '../../components/dashboard/DashboardSidebar';
@@ -15,10 +15,10 @@ import {
   formatDate, getInitials, getAvatarColor, formatStatus,
 } from '../../utils/helpers';
 import { Plus, Package, Inbox, Star, CheckCircle, Eye, Trash2, Edit3, XCircle, Power } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 export default function UserDashboard() {
   const { currentUser, updateProfile } = useAuth();
+  const navigate = useNavigate();
   const toast = useToast();
   const {
     items, requests, reviews, users,
@@ -29,8 +29,6 @@ export default function UserDashboard() {
   } = useApp();
 
   const [tab,          setTab]         = useState('profile');
-  const [itemModal,    setItemModal]   = useState(false);
-  const [editItem,     setEditItem]    = useState(null);
   const [deleteConf,   setDeleteConf]  = useState(null); // { itemId }
   const [profileModal, setProfileModal] = useState(false);
   const [profileName,  setProfileName]  = useState('');
@@ -41,14 +39,9 @@ export default function UserDashboard() {
 
   useEffect(() => {
     if (searchParams.get('openPost') === 'true') {
-      setEditItem(null);
-      setItemModal(true);
-      // Clean up search param from url
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete('openPost');
-      setSearchParams(newParams, { replace: true });
+      navigate('/donate-lend', { replace: true });
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, navigate]);
 
   // User's own items
   const myItems = items.filter(i => i.owner_id === currentUser._id);
@@ -112,7 +105,7 @@ export default function UserDashboard() {
         <h2 style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.1rem', color: 'var(--color-text-dark)' }}>
           My Posted Items ({myItems.length})
         </h2>
-        <button id="add-item-btn" onClick={() => { setEditItem(null); setItemModal(true); }} className="btn btn-primary btn-sm">
+        <button id="add-item-btn" onClick={() => navigate('/donate-lend')} className="btn btn-primary btn-sm">
           <Plus size={15} /> Post New Item
         </button>
       </div>
@@ -121,7 +114,7 @@ export default function UserDashboard() {
         <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-text-light)', background: 'var(--color-mint-pale)', borderRadius: 'var(--radius-lg)', border: '2px dashed var(--color-border)' }}>
           <Package size={40} opacity={0.3} style={{ margin: '0 auto 0.75rem' }} />
           <p>You haven't posted any items yet.</p>
-          <button className="btn btn-primary btn-sm" style={{ marginTop: '1rem' }} onClick={() => { setEditItem(null); setItemModal(true); }}>Post Your First Item</button>
+          <button className="btn btn-primary btn-sm" style={{ marginTop: '1rem' }} onClick={() => navigate('/donate-lend')}>Post Your First Item</button>
         </div>
       )}
 
@@ -150,7 +143,7 @@ export default function UserDashboard() {
                   <Link to={`/items/${item._id}`} id={`view-item-${item._id}`} className="btn btn-ghost btn-sm" aria-label="View item"><Eye size={14} /></Link>
                   {item.status === 'AVAILABLE' && (
                     <>
-                      <button id={`edit-item-${item._id}`} className="btn btn-ghost btn-sm" aria-label="Edit item" onClick={() => { setEditItem(item); setItemModal(true); }}><Edit3 size={14} /></button>
+                      <button id={`edit-item-${item._id}`} className="btn btn-ghost btn-sm" aria-label="Edit item" onClick={() => navigate(`/donate-lend?edit=${item._id}`)}><Edit3 size={14} /></button>
                       <button id={`deactivate-item-${item._id}`} className="btn btn-ghost btn-sm" aria-label="Deactivate" style={{ color: '#e65100' }} onClick={() => { deactivateItem(item._id); toast.info('Item Deactivated', `"${item.name}" removed from listings.`); }}><Power size={14} /></button>
                     </>
                   )}
@@ -260,7 +253,7 @@ export default function UserDashboard() {
                 <div>
                   {item.type === 'DONATE' && req.status === 'APPROVED' && (
                     <button id={`pickup-${req._id}`} className="btn btn-primary btn-sm"
-                      onClick={() => { confirmPickup(req._id); toast.success('Pickup Confirmed ✓', 'Donor has been notified.'); }}>
+                      onClick={() => { confirmPickup(item._id, req._id); toast.success('Pickup Confirmed ✓', 'Donor has been notified.'); }}>
                       Confirm Pickup
                     </button>
                   )}
@@ -340,10 +333,6 @@ export default function UserDashboard() {
       </main>
       <Footer />
 
-      {/* Add/Edit Item Modal */}
-      <Modal isOpen={itemModal} onClose={() => { setItemModal(false); setEditItem(null); }} title={editItem ? 'Edit Item' : 'Post New Item'} size="md">
-        <ItemForm item={editItem} onClose={() => { setItemModal(false); setEditItem(null); }} />
-      </Modal>
 
       {/* Delete confirmation */}
       <ConfirmDialog

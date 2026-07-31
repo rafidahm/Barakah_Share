@@ -15,6 +15,7 @@ import Register from '../pages/auth/Register';
 
 // Private pages
 import UserDashboard  from '../pages/user/UserDashboard';
+import DonateLend     from '../pages/user/DonateLend';
 import AdminDashboard from '../pages/admin/AdminDashboard';
 
 // 404
@@ -37,6 +38,9 @@ export default function AppRouter() {
       {/* Protected */}
       <Route path="/dashboard" element={
         <PrivateRoute><UserDashboard /></PrivateRoute>
+      } />
+      <Route path="/donate-lend" element={
+        <PrivateRoute><DonateLend /></PrivateRoute>
       } />
       <Route path="/dashboard/admin" element={
         <AdminRoute><AdminDashboard /></AdminRoute>
